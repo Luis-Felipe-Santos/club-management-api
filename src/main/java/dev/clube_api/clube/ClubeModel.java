@@ -2,11 +2,17 @@ package dev.clube_api.clube;
 
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name="clubes")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ClubeModel {
 
     @Id
