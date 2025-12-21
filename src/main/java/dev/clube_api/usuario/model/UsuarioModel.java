@@ -1,6 +1,9 @@
-package dev.clube_api.usuario;
+package dev.clube_api.usuario.model;
 
 
+import dev.clube_api.clube.model.ClubeModel;
+import dev.clube_api.usuario.enums.RoleUsuario;
+import dev.clube_api.usuario.enums.StatusUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +20,9 @@ public class UsuarioModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "imagem_url")
+    private String imagemUrl;
+
     @Column(name="nome", nullable = false)
     private String nome;
 
@@ -29,7 +35,17 @@ public class UsuarioModel {
     @Column(name="senha", nullable = false)
     private String senha;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cargo")
+    private RoleUsuario role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private StatusUsuario status;
 
 
+    @ManyToOne
+    @JoinColumn(name="clube_id", nullable = false)
+    private ClubeModel clube;
 
 }

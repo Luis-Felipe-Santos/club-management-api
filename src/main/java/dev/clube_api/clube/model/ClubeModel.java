@@ -1,6 +1,7 @@
-package dev.clube_api.clube;
+package dev.clube_api.clube.model;
 
 
+import dev.clube_api.clube.enums.StatusClube;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +31,7 @@ public class ClubeModel {
     @Column(name="status", nullable = false)
     private StatusClube status;
 
-    @Column(name="data_cadastro")
-    private LocalDateTime dataCriacao;
+    @Column(name="data_cadastro", nullable = false)
+    private LocalDateTime dataCadastro;
+
 }

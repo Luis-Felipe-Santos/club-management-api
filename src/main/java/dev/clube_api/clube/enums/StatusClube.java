@@ -1,4 +1,4 @@
-package dev.clube_api.clube;
+package dev.clube_api.clube.enums;
 
 public enum StatusClube {
     Ativo,

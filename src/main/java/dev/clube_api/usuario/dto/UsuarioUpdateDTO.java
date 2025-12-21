@@ -1,0 +1,16 @@
+package dev.clube_api.usuario.dto;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+
+public class UsuarioUpdateDTO {
+    private String nome;
+    private String email;
+    private String imagemUrl;
+}
