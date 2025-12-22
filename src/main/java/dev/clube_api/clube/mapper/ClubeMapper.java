@@ -18,7 +18,7 @@ public class ClubeMapper {
         clube.setNome(dto.getNome());
         clube.setCnpj(dto.getCnpj());
 
-        clube.setStatus(StatusClube.Ativo);
+        clube.setStatus(StatusClube.ATIVO);
         clube.setDataCadastro(LocalDateTime.now());
 
         return clube;

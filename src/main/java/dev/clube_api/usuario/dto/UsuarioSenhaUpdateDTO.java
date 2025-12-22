@@ -1,0 +1,15 @@
+package dev.clube_api.usuario.dto;
+
+
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UsuarioSenhaUpdateDTO {
+    @Size(min = 6)
+    private String novaSenha;
+}

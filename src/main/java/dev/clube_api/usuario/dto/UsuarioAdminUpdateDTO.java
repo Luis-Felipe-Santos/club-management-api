@@ -1,10 +1,7 @@
 package dev.clube_api.usuario.dto;
 
-
 import dev.clube_api.usuario.enums.RoleUsuario;
 import dev.clube_api.usuario.enums.StatusUsuario;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,13 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class UsuarioUpdateDTO {
-
-    private String imagemUrl;
-
-    private String nome;
-
-    @Email
-    private String email;
+public class UsuarioAdminUpdateDTO {
+    private RoleUsuario roleUsuario;
+    private StatusUsuario statusUsuario;
 }

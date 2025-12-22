@@ -36,7 +36,7 @@ public class UsuarioModel {
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "cargo")
+    @Column(name = "permissao")
     private RoleUsuario role;
 
     @Enumerated(EnumType.STRING)

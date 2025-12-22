@@ -19,6 +19,12 @@ public class ClubeController{
         this.clubeService = clubeService;
     }
 
+    @GetMapping
+    public String boasVindas() {
+        return "Essa é minha primeira mensagem nessa rota";
+    }
+
+
     @PostMapping("/criar")
     public ResponseEntity<ClubeResponseDTO> criar(
             @RequestBody @Valid ClubeCreateDTO dto
@@ -50,7 +56,9 @@ public class ClubeController{
         return ResponseEntity.ok(response);
     }
 
-
-
-
+    @DeleteMapping("/deletar/{id}")
+    public ResponseEntity<String> deletar(@PathVariable Long id) {
+            clubeService.deletar(id);
+            return ResponseEntity.ok("Clube deletado com sucesso");
+    }
 }

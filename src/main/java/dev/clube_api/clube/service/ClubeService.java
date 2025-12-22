@@ -7,6 +7,7 @@ import dev.clube_api.clube.dto.ClubeUpdateDTO;
 import dev.clube_api.clube.mapper.ClubeMapper;
 import dev.clube_api.clube.model.ClubeModel;
 import dev.clube_api.clube.repository.ClubeRepository;
+import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class ClubeService {
 
     public ClubeResponseDTO buscarPorId(Long id) {
         ClubeModel clube = clubeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Clube não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
         return clubeMapper.toResponseDTO(clube);
     }
 
@@ -43,12 +44,20 @@ public class ClubeService {
 
     public ClubeResponseDTO atualizar(Long id, ClubeUpdateDTO dto) {
         ClubeModel clube = clubeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Clube não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
 
         clubeMapper.updateEntity(clube, dto);
 
         ClubeModel atualizado = clubeRepository.save(clube);
         return clubeMapper.toResponseDTO(atualizado);
+    }
+    public void deletar(Long id) {
+        ClubeModel clube = clubeRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Clube não encontrado")
+                );
+
+        clubeRepository.delete(clube);
     }
 
 
