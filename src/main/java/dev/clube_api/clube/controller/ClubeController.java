@@ -8,6 +8,8 @@ import dev.clube_api.usuario.model.UsuarioModel;
 import dev.clube_api.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,34 +27,48 @@ public class ClubeController{
 
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClubeResponseDTO> criar(
             @RequestBody @Valid ClubeCreateDTO dto,
-            @RequestHeader("X-USER-ID") Long id
+           Authentication authentication
     ) {
-        UsuarioModel usuarioLogado = usuarioService.buscarEntidadePorId(id);
-
-        ClubeResponseDTO response = clubeService.criarClube(dto, usuarioLogado);
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
 
         return ResponseEntity.ok(
-                response
+                clubeService.criarClube(dto, usuarioLogado)
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/{id}")
     public ResponseEntity<ClubeResponseDTO> buscarPorId(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
-        ClubeResponseDTO response = clubeService.buscarPorId(id);
-        return ResponseEntity.ok(response);
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        return ResponseEntity.ok(
+                clubeService.buscarPorId(id, usuarioLogado)
+        );
+
     }
 
     @GetMapping
-    public ResponseEntity<List<ClubeResponseDTO>> listar() {
-        List<ClubeResponseDTO> response = clubeService.listar();
-        return ResponseEntity.ok(response);
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    public ResponseEntity<List<ClubeResponseDTO>> listar(Authentication authentication) {
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        return ResponseEntity.ok(
+                clubeService.listarPorUsuario(usuarioLogado)
+        );
+
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClubeResponseDTO> atualizar(
             @PathVariable Long id,
             @RequestBody ClubeUpdateDTO dto
@@ -61,9 +77,23 @@ public class ClubeController{
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletar(@PathVariable Long id) {
-            clubeService.deletar(id);
-            return ResponseEntity.ok("Clube deletado com sucesso");
+    @PatchMapping("/{id}/inativar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> inativar(@PathVariable Long id) {
+            clubeService.inativar(id);
+            return ResponseEntity.ok("Clube inativado com sucesso");
+    }
+    @PatchMapping("/{id}/bloquear")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> bloquear(@PathVariable Long id) {
+        clubeService.bloquear(id);
+        return ResponseEntity.ok("Clube bloqueado com sucesso");
+    }
+
+    @PatchMapping("/{id}/reativar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> reativar(@PathVariable Long id) {
+        clubeService.reativar(id);
+        return ResponseEntity.ok("Clube reativado com sucesso");
     }
 }

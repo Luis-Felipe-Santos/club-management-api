@@ -28,7 +28,7 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UsuarioResponseDTO criar(UsuarioCreateDTO dto){
+    public UsuarioResponseDTO criar(UsuarioCreateDTO dto, UsuarioModel usuarioLogado){
         if (usuarioRepository.existsByCpf(dto.getCpf())) {
             throw new IllegalArgumentException("CPF já cadastrado");
         }
@@ -37,14 +37,10 @@ public class UsuarioService {
             throw new IllegalArgumentException("E-mail já cadastrado");
         }
 
-        ClubeModel clube = null;
-
-        if (dto.getClubeId() != null) {
-            clube = clubeRepository.findById(dto.getClubeId())
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
-        }
-
-        UsuarioModel usuario = usuarioMapper.toEntity(dto, clube);
+        UsuarioModel usuario = usuarioMapper.toEntity(
+                dto,
+                usuarioLogado.getClube()
+        );
 
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
@@ -53,8 +49,13 @@ public class UsuarioService {
         return usuarioMapper.toResponseDTO(salvo);
     }
 
-    public List<UsuarioResponseDTO> listar(){
-        return usuarioRepository.findAll()
+    public List<UsuarioResponseDTO> listarPorClube(UsuarioModel usuarioLogado) {
+
+        if (usuarioLogado.getClube() == null) {
+            throw new SecurityException("Usuário não está vinculado a um clube");
+        }
+
+        return usuarioRepository.findByClube(usuarioLogado.getClube())
                 .stream()
                 .map(usuarioMapper::toResponseDTO)
                 .toList();
@@ -67,10 +68,24 @@ public class UsuarioService {
                 );
     }
 
-    public UsuarioResponseDTO buscarPorID(Long id){
-        UsuarioModel usuario = buscarEntidadePorId(id);
+    public UsuarioResponseDTO buscarPorId(
+            Long id,
+            UsuarioModel usuarioLogado
+    ) {
+        UsuarioModel usuario = usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Usuário não encontrado")
+                );
+
+        if (!usuario.getClube().getId()
+                .equals(usuarioLogado.getClube().getId())) {
+            throw new SecurityException("Usuário não pertence ao seu clube");
+        }
+
         return usuarioMapper.toResponseDTO(usuario);
     }
+
+
 
 
     public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto){
@@ -83,6 +98,12 @@ public class UsuarioService {
 
         return usuarioMapper.toResponseDTO(atualizado);
 
+    }
+    public UsuarioModel buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Usuário não encontrado")
+                );
     }
     public void atualizarSenha(Long id, UsuarioSenhaUpdateDTO dto) {
 
