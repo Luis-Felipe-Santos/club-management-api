@@ -29,8 +29,20 @@ public class UsuarioService {
     }
 
     public UsuarioResponseDTO criar(UsuarioCreateDTO dto){
-        ClubeModel clube = clubeRepository.findById(dto.getClubeId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+        if (usuarioRepository.existsByCpf(dto.getCpf())) {
+            throw new IllegalArgumentException("CPF já cadastrado");
+        }
+
+        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("E-mail já cadastrado");
+        }
+
+        ClubeModel clube = null;
+
+        if (dto.getClubeId() != null) {
+            clube = clubeRepository.findById(dto.getClubeId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+        }
 
         UsuarioModel usuario = usuarioMapper.toEntity(dto, clube);
 
@@ -48,13 +60,18 @@ public class UsuarioService {
                 .toList();
     }
 
-    public UsuarioResponseDTO buscarPorID(Long id){
-        UsuarioModel usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
-
-        return usuarioMapper.toResponseDTO(usuario);
-
+    public UsuarioModel buscarEntidadePorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Usuário não encontrado")
+                );
     }
+
+    public UsuarioResponseDTO buscarPorID(Long id){
+        UsuarioModel usuario = buscarEntidadePorId(id);
+        return usuarioMapper.toResponseDTO(usuario);
+    }
+
 
     public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto){
         UsuarioModel usuario = usuarioRepository.findById(id)

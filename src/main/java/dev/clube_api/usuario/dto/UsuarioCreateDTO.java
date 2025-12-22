@@ -33,6 +33,6 @@ public class UsuarioCreateDTO {
     @NotNull
     private RoleUsuario role;
 
-    @NotNull
+
     private Long clubeId;
 }

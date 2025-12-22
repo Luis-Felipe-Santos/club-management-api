@@ -2,6 +2,7 @@ package dev.clube_api.clube.model;
 
 
 import dev.clube_api.clube.enums.StatusClube;
+import dev.clube_api.usuario.model.UsuarioModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,5 +34,9 @@ public class ClubeModel {
 
     @Column(name="data_cadastro", nullable = false)
     private LocalDateTime dataCadastro;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_admin_id", nullable = false)
+    private UsuarioModel admin;
 
 }

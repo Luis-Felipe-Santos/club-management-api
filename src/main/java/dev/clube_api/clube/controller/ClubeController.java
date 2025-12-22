@@ -4,6 +4,8 @@ import dev.clube_api.clube.dto.ClubeCreateDTO;
 import dev.clube_api.clube.dto.ClubeResponseDTO;
 import dev.clube_api.clube.dto.ClubeUpdateDTO;
 import dev.clube_api.clube.service.ClubeService;
+import dev.clube_api.usuario.model.UsuarioModel;
+import dev.clube_api.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,26 +16,29 @@ import java.util.List;
 @RequestMapping("/clubes")
 public class ClubeController{
     private final ClubeService clubeService;
+    private final UsuarioService usuarioService;
 
-    public ClubeController(ClubeService clubeService) {
+    public ClubeController(ClubeService clubeService, UsuarioService usuarioService) {
         this.clubeService = clubeService;
-    }
-
-    @GetMapping
-    public String boasVindas() {
-        return "Essa é minha primeira mensagem nessa rota";
+        this.usuarioService = usuarioService;
     }
 
 
-    @PostMapping("/criar")
+    @PostMapping
     public ResponseEntity<ClubeResponseDTO> criar(
-            @RequestBody @Valid ClubeCreateDTO dto
+            @RequestBody @Valid ClubeCreateDTO dto,
+            @RequestHeader("X-USER-ID") Long id
     ) {
-        ClubeResponseDTO response = clubeService.criarClube(dto);
-        return ResponseEntity.ok(response);
+        UsuarioModel usuarioLogado = usuarioService.buscarEntidadePorId(id);
+
+        ClubeResponseDTO response = clubeService.criarClube(dto, usuarioLogado);
+
+        return ResponseEntity.ok(
+                response
+        );
     }
 
-    @GetMapping("/buscar/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ClubeResponseDTO> buscarPorId(
             @PathVariable Long id
     ) {
@@ -41,13 +46,13 @@ public class ClubeController{
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/listar")
+    @GetMapping
     public ResponseEntity<List<ClubeResponseDTO>> listar() {
         List<ClubeResponseDTO> response = clubeService.listar();
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/atualizar/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ClubeResponseDTO> atualizar(
             @PathVariable Long id,
             @RequestBody ClubeUpdateDTO dto
@@ -56,7 +61,7 @@ public class ClubeController{
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/deletar/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deletar(@PathVariable Long id) {
             clubeService.deletar(id);
             return ResponseEntity.ok("Clube deletado com sucesso");

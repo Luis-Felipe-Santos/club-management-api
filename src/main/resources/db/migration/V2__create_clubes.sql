@@ -1,0 +1,9 @@
+CREATE TABLE clubes (
+    id BIGSERIAL PRIMARY KEY,
+
+    nome VARCHAR(255) NOT NULL,
+    cnpj VARCHAR(14) UNIQUE NOT NULL,
+
+    status VARCHAR(50) NOT NULL,
+    data_cadastro TIMESTAMP NOT NULL
+);

@@ -53,9 +53,12 @@ public class UsuarioMapper {
         dto.setRole(usuarioModel.getRole());
         dto.setStatus(usuarioModel.getStatus());
 
-        dto.setClubeId(usuarioModel.getClube().getId());
-        dto.setNomeClube(usuarioModel.getClube().getNome());
+        if (usuarioModel.getClube() != null) {
+            dto.setClubeId(usuarioModel.getClube().getId());
+            dto.setNomeClube(usuarioModel.getClube().getNome());
+        }
 
         return dto;
     }
+
 }

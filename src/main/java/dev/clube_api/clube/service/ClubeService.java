@@ -8,6 +8,9 @@ import dev.clube_api.clube.mapper.ClubeMapper;
 import dev.clube_api.clube.model.ClubeModel;
 import dev.clube_api.clube.repository.ClubeRepository;
 import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
+import dev.clube_api.usuario.enums.RoleUsuario;
+import dev.clube_api.usuario.model.UsuarioModel;
+import dev.clube_api.usuario.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,15 +20,24 @@ public class ClubeService {
 
     private final ClubeRepository clubeRepository;
     private final ClubeMapper clubeMapper;
+    private final UsuarioRepository usuarioRepository;
 
-    public ClubeService(ClubeRepository clubeRepository, ClubeMapper clubeMapper) {
+    public ClubeService(ClubeRepository clubeRepository, ClubeMapper clubeMapper, UsuarioRepository usuarioRepository) {
         this.clubeRepository = clubeRepository;
         this.clubeMapper = clubeMapper;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    public ClubeResponseDTO criarClube(ClubeCreateDTO dto) {
+    public ClubeResponseDTO criarClube(ClubeCreateDTO dto, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeMapper.toEntity(dto);
+        clube.setAdmin(usuarioLogado);
+
         ClubeModel salvo = clubeRepository.save(clube);
+        usuarioLogado.setClube(salvo);
+        usuarioLogado.setRole(RoleUsuario.ADMIN);
+
+        usuarioRepository.save(usuarioLogado);
+
         return clubeMapper.toResponseDTO(salvo);
     }
 

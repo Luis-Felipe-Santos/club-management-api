@@ -8,13 +8,19 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name="usuarios")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioModel {
+public class UsuarioModel implements UserDetails {
     @Id
     @Column(name="id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,7 +51,32 @@ public class UsuarioModel {
 
 
     @ManyToOne
-    @JoinColumn(name="clube_id", nullable = false)
+    @JoinColumn(name="clube_id", nullable = true)
     private ClubeModel clube;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+    @Override
+    public String getUsername() {
+        return email;
+    }
+    @Override
+    public String getPassword() {
+        return senha;
+    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonLocked() {
+        return status != StatusUsuario.BLOQUEADO;
+    }
+    @Override
+    public boolean isEnabled() {
+        return status == StatusUsuario.ATIVO;
+    }
 
 }
