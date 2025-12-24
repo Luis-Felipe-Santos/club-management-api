@@ -4,7 +4,6 @@ package dev.clube_api.socio_plano.controller;
 import dev.clube_api.socio_plano.dto.SocioPlanoCreateDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
-import dev.clube_api.socio_plano.dto.SocioPlanoUpdateDTO;
 import dev.clube_api.socio_plano.service.SocioPlanoService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import dev.clube_api.usuario.service.UsuarioService;
@@ -39,7 +38,7 @@ public class SocioPlanoController {
         return ResponseEntity.ok(socioPlanoService.vincular(dto, usuarioLogado));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN,'FUNCIONARIO')")
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/socio/{id}")
     public ResponseEntity<List<SocioPlanoResumoDTO>> listarPorSocio(
             @PathVariable Long id,
@@ -50,14 +49,36 @@ public class SocioPlanoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{id}")
-        public ResponseEntity<SocioPlanoResponseDTO> atualizarStatus(
-                @PathVariable Long id,
-                @RequestBody @Valid SocioPlanoUpdateDTO dto,
-                Authentication authentication
-        ){
-            UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
-            return ResponseEntity.ok(socioPlanoService.atualizarStatus(id, dto, usuarioLogado));
-        }
+    @PatchMapping("/{id}/suspender")
+    public ResponseEntity<SocioPlanoResponseDTO> suspender(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(socioPlanoService.suspender(id, usuarioLogado));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<SocioPlanoResponseDTO> cancelar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(socioPlanoService.cancelar(id, usuarioLogado));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<SocioPlanoResponseDTO> reativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(socioPlanoService.reativar(id, usuarioLogado));
+    }
 
 }

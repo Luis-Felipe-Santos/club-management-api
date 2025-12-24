@@ -8,10 +8,11 @@ import dev.clube_api.socio.repository.SocioRepository;
 import dev.clube_api.socio_plano.dto.SocioPlanoCreateDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
-import dev.clube_api.socio_plano.dto.SocioPlanoUpdateDTO;
 import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import dev.clube_api.socio_plano.mapper.SocioPlanoMapper;
 import dev.clube_api.socio_plano.model.SocioPlanoModel;
+import dev.clube_api.socio_plano_historico.enums.AcaoSocioPlano;
+import dev.clube_api.socio_plano_historico.service.SocioPlanoHistoricoService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import org.springframework.stereotype.Service;
 import dev.clube_api.socio_plano.repository.SocioPlanoRepository;
@@ -26,17 +27,20 @@ public class SocioPlanoService {
     private final SocioPlanoMapper socioPlanoMapper;
     private final SocioRepository socioRepository;
     private final PlanoRepository planoRepository;
+    private final SocioPlanoHistoricoService historicoService;
 
     public SocioPlanoService(
             SocioPlanoRepository socioPlanoRepository,
             SocioPlanoMapper socioPlanoMapper,
             SocioRepository socioRepository,
-            PlanoRepository planoRepository
+            PlanoRepository planoRepository,
+            SocioPlanoHistoricoService historicoService
     ) {
         this.socioPlanoRepository = socioPlanoRepository;
         this.socioPlanoMapper = socioPlanoMapper;
         this.socioRepository = socioRepository;
         this.planoRepository = planoRepository;
+        this.historicoService = historicoService;
     }
 
     public SocioPlanoResponseDTO vincular(SocioPlanoCreateDTO dto, UsuarioModel usuarioLogado) {
@@ -55,8 +59,12 @@ public class SocioPlanoService {
         }
 
         SocioPlanoModel sp = socioPlanoMapper.toEntity(socio, plano);
+        sp.setStatus(StatusSocioPlano.ATIVO);
 
-        return socioPlanoMapper.toResponseDTO(socioPlanoRepository.save(sp));
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(salvo, null, StatusSocioPlano.ATIVO, AcaoSocioPlano.VINCULO, usuarioLogado);
+        return socioPlanoMapper.toResponseDTO(salvo);
     }
 
     public List<SocioPlanoResumoDTO> listarPorSocio(Long socioId, UsuarioModel usuarioLogado) {
@@ -73,18 +81,90 @@ public class SocioPlanoService {
                 .toList();
     }
 
-    public SocioPlanoResponseDTO atualizarStatus(Long socioPlanoId, SocioPlanoUpdateDTO dto, UsuarioModel usuarioLogado) {
+    private SocioPlanoModel buscarVinculoDoClube(Long socioPlanoId, UsuarioModel usuarioLogado) {
         SocioPlanoModel sp = socioPlanoRepository.findById(socioPlanoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Vínculo não encontrado"));
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Vínculo não encontrado")
+                );
 
         if (!sp.getSocio().getClube().getId()
                 .equals(usuarioLogado.getClube().getId())) {
             throw new SecurityException("Vínculo não pertence ao seu clube");
         }
 
-        socioPlanoMapper.updateEntity(sp, dto);
-
-        return socioPlanoMapper.toResponseDTO(socioPlanoRepository.save(sp));
+        return sp;
     }
+    public SocioPlanoResponseDTO suspender(Long socioPlanoId, UsuarioModel usuarioLogado) {
+        SocioPlanoModel sp =
+                buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+
+        if (sp.getStatus() != StatusSocioPlano.ATIVO) {
+            throw new IllegalStateException(
+                    "Só é possível suspender um plano ATIVO"
+            );
+        }
+
+        StatusSocioPlano statusAnterior = sp.getStatus();
+
+        sp.setStatus(StatusSocioPlano.SUSPENSO);
+
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(salvo, statusAnterior, StatusSocioPlano.SUSPENSO, AcaoSocioPlano.SUSPENSAO, usuarioLogado);
+
+        return socioPlanoMapper.toResponseDTO(salvo);
+    }
+    public SocioPlanoResponseDTO cancelar(Long socioPlanoId, UsuarioModel usuarioLogado) {
+        SocioPlanoModel sp = buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+
+        if (sp.getStatus() == StatusSocioPlano.CANCELADO) {
+            throw new IllegalStateException(
+                    "Plano já está cancelado"
+            );
+        }
+
+        StatusSocioPlano statusAnterior = sp.getStatus();
+
+        sp.setStatus(StatusSocioPlano.CANCELADO);
+
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(
+                salvo,
+                statusAnterior,
+                StatusSocioPlano.CANCELADO,
+                AcaoSocioPlano.CANCELAMENTO,
+                usuarioLogado
+        );
+
+        return socioPlanoMapper.toResponseDTO(salvo);
+    }
+
+    public SocioPlanoResponseDTO reativar(Long socioPlanoId, UsuarioModel usuarioLogado) {
+        SocioPlanoModel sp = buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+
+        if (sp.getStatus() != StatusSocioPlano.SUSPENSO) {
+            throw new IllegalStateException(
+                    "Só é possível reativar planos SUSPENSOS"
+            );
+        }
+
+        StatusSocioPlano statusAnterior = sp.getStatus();
+
+        sp.setStatus(StatusSocioPlano.ATIVO);
+
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(
+                salvo,
+                statusAnterior,
+                StatusSocioPlano.ATIVO,
+                AcaoSocioPlano.REATIVACAO,
+                usuarioLogado
+        );
+
+        return socioPlanoMapper.toResponseDTO(salvo);
+    }
+
 
 }

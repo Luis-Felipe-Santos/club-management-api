@@ -5,7 +5,6 @@ import dev.clube_api.plano.model.PlanoModel;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
-import dev.clube_api.socio_plano.dto.SocioPlanoUpdateDTO;
 import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import dev.clube_api.socio_plano.model.SocioPlanoModel;
 import org.springframework.stereotype.Component;
@@ -40,7 +39,4 @@ public class SocioPlanoMapper {
         );
     }
 
-    public void updateEntity(SocioPlanoModel socioPlano, SocioPlanoUpdateDTO dto) {
-        socioPlano.setStatus(dto.getStatus());
-    }
 }
