@@ -17,5 +17,6 @@ public class SocioPlanoHistoricoResponseDTO {
     private AcaoSocioPlano acao;
     private StatusSocioPlano statusAnterior;
     private StatusSocioPlano statusNovo;
+    private String usuarioNome;
     private LocalDateTime data;
 }

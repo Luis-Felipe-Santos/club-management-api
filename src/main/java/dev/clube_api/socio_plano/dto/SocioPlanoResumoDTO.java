@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SocioPlanoResumoDTO {
+    private Long socioPlanoId;
     private Long id;
     private String nomePlano;
     private StatusSocioPlano status;

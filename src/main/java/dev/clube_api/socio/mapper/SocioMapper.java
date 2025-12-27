@@ -7,7 +7,10 @@ import dev.clube_api.socio.dto.SocioResumoDTO;
 import dev.clube_api.socio.dto.SocioUpdateDTO;
 import dev.clube_api.socio.enums.StatusSocio;
 import dev.clube_api.socio.model.SocioModel;
+import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class SocioMapper {
@@ -29,7 +32,7 @@ public class SocioMapper {
         return socio;
     }
 
-    public SocioResponseDTO toResponseDTO(SocioModel socio){
+    public SocioResponseDTO toResponseDTO(SocioModel socio, List<SocioPlanoResumoDTO> planos){
         SocioResponseDTO dto = new SocioResponseDTO();
 
         dto.setId(socio.getId());
@@ -41,6 +44,7 @@ public class SocioMapper {
         dto.setEndereco(socio.getEndereco());
         dto.setImagemUrl(socio.getImagemUrl());
         dto.setStatus(socio.getStatus());
+        dto.setPlanos(planos);
         dto.setCreatedAt(socio.getCreatedAt());
         dto.setUpdatedAt(socio.getUpdatedAt());
 

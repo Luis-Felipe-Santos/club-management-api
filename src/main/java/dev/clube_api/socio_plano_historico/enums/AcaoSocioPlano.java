@@ -4,5 +4,6 @@ public enum AcaoSocioPlano {
     VINCULO,
     SUSPENSAO,
     CANCELAMENTO,
-    REATIVACAO
+    REATIVACAO,
+    ALTERACAO
 }

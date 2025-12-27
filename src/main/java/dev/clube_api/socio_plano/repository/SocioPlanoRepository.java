@@ -12,4 +12,11 @@ public interface SocioPlanoRepository extends JpaRepository<SocioPlanoModel, Lon
     List<SocioPlanoModel> findBySocio(SocioModel socio);
 
     boolean existsBySocioAndPlanoAndStatus(SocioModel socio, PlanoModel plano, StatusSocioPlano status);
+
+    List<SocioPlanoModel> findByPlanoAndStatusAndSocio_Clube_Id(
+            PlanoModel plano,
+            StatusSocioPlano status,
+            Long clubeId
+    );
+
 }

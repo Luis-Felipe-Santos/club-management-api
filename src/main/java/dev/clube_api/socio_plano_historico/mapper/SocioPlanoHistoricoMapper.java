@@ -14,6 +14,7 @@ public class SocioPlanoHistoricoMapper {
         dto.setAcao(model.getAcao());
         dto.setStatusAnterior(model.getStatusAnterior());
         dto.setStatusNovo(model.getStatusNovo());
+        dto.setUsuarioNome(model.getUsuario().getNome());
         dto.setData(model.getCreatedAt());
 
         return dto;

@@ -1,6 +1,8 @@
 package dev.clube_api.socio_plano.controller;
 
 
+import dev.clube_api.socio.dto.SocioResumoDTO;
+import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio_plano.dto.SocioPlanoCreateDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
@@ -21,6 +23,7 @@ public class SocioPlanoController {
 
     private final SocioPlanoService socioPlanoService;
     private final UsuarioService usuarioService;
+
 
     public SocioPlanoController(SocioPlanoService socioPlanoService, UsuarioService usuarioService ) {
         this.socioPlanoService = socioPlanoService;
@@ -48,6 +51,18 @@ public class SocioPlanoController {
         return  ResponseEntity.ok(socioPlanoService.listarPorSocio(id, usuarioLogado));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    @GetMapping("/planos/{planoId}/socios")
+    public ResponseEntity<List<SocioResumoDTO>> listarSociosPorPlano(
+            @PathVariable Long planoId,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado =
+                usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(socioPlanoService.listarSociosPorPlano(planoId, usuarioLogado));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/suspender")
     public ResponseEntity<SocioPlanoResponseDTO> suspender(
@@ -57,6 +72,21 @@ public class SocioPlanoController {
         UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
 
         return ResponseEntity.ok(socioPlanoService.suspender(id, usuarioLogado));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/alterar-plano")
+    public ResponseEntity<SocioPlanoResponseDTO> alterarPlano(
+            @PathVariable Long id,
+            @RequestParam Long novoPlanoId,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado =
+                usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(
+                socioPlanoService.alterarPlano(id, novoPlanoId, usuarioLogado)
+        );
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -34,6 +34,7 @@ public class SocioPlanoMapper {
     public SocioPlanoResumoDTO toResumoDTO(SocioPlanoModel sp) {
         return new SocioPlanoResumoDTO(
                 sp.getId(),
+                sp.getPlano().getId(),
                 sp.getPlano().getNome(),
                 sp.getStatus()
         );

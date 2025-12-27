@@ -10,6 +10,8 @@ import dev.clube_api.socio.enums.StatusSocio;
 import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio.repository.SocioRepository;
+import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
+import dev.clube_api.socio_plano.service.SocioPlanoService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +22,13 @@ public class SocioService {
 
     private final SocioRepository socioRepository;
     private final SocioMapper socioMapper;
+    private final SocioPlanoService socioPlanoService;
 
-    public SocioService(SocioRepository socioRepository, SocioMapper socioMapper) {
+    public SocioService(SocioRepository socioRepository, SocioMapper socioMapper, SocioPlanoService socioPlanoService) {
         this.socioRepository = socioRepository;
         this.socioMapper = socioMapper;
+        this.socioPlanoService = socioPlanoService;
+
     }
 
     public SocioResponseDTO criar(SocioCreateDTO dto, UsuarioModel usuarioLogado) {
@@ -35,7 +40,8 @@ public class SocioService {
         socio.setStatus(StatusSocio.ATIVO);
 
         return socioMapper.toResponseDTO(
-                socioRepository.save(socio)
+                socioRepository.save(socio),
+                List.of()
         );
     }
 
@@ -54,7 +60,9 @@ public class SocioService {
 
         SocioModel socio = buscarSocioDoClube(socioId, usuarioLogado);
 
-        return socioMapper.toResponseDTO(socio);
+        List<SocioPlanoResumoDTO> planos = socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
+
+        return socioMapper.toResponseDTO(socio, planos);
     }
 
     public SocioResponseDTO atualizar(Long socioId, SocioUpdateDTO dto, UsuarioModel usuarioLogado) {
@@ -65,8 +73,12 @@ public class SocioService {
 
         socioMapper.updateEntity(socio, dto);
 
+        var planos = socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
+
+
         return socioMapper.toResponseDTO(
-                socioRepository.save(socio)
+                socioRepository.save(socio),
+                planos
         );
     }
 
