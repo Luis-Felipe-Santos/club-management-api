@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: clube-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/clube
+      SPRING_DATASOURCE_USERNAME: clube
+      SPRING_DATASOURCE_PASSWORD: clube
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      JWT_SECRET: clube-api-2026-super-secreta-987654321
+
+  db:
+    image: postgres:16
+    container_name: clube-db
+    environment:
+      POSTGRES_DB: clube
+      POSTGRES_USER: clube
+      POSTGRES_PASSWORD: clube
+    ports:
+      - "5432:5432"
