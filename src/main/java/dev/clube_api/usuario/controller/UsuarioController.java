@@ -22,6 +22,7 @@ public class UsuarioController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponseDTO> criar(
             @RequestBody @Valid UsuarioCreateDTO dto,
             Authentication authentication
