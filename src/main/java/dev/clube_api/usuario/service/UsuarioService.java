@@ -48,6 +48,15 @@ public class UsuarioService {
 
         return usuarioMapper.toResponseDTO(salvo);
     }
+    public UsuarioResponseDTO buscarUsuarioLogado(String email) {
+
+        UsuarioModel usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Usuário não encontrado")
+                );
+
+        return usuarioMapper.toResponseDTO(usuario);
+    }
 
     public List<UsuarioResponseDTO> listarPorClube(UsuarioModel usuarioLogado) {
 

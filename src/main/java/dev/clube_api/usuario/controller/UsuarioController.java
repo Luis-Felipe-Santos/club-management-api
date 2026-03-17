@@ -34,6 +34,16 @@ public class UsuarioController {
                 usuarioService.criar(dto, usuarioLogado)
         );
     }
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioResponseDTO> usuarioLogado(
+            Authentication authentication
+    ) {
+
+        return ResponseEntity.ok(
+                usuarioService.buscarUsuarioLogado(authentication.getName())
+        );
+    }
 
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/{id}")
