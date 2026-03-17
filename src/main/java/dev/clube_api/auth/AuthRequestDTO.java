@@ -1,4 +1,4 @@
-package dev.clube_api.usuario.auth;
+package dev.clube_api.auth;
 
 import lombok.Data;
 
