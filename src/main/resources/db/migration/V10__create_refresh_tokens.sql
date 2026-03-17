@@ -1,11 +1,11 @@
 CREATE TABLE refresh_token (
-    id BIGSERIAL PRIMARY KEY,
-    token VARCHAR(255) NOT NULL UNIQUE,
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(255) NOT NULL,
     expiry_date TIMESTAMP NOT NULL,
-    usuario_id BIGINT NOT NULL,
+    usuario_id BIGINT,
 
-    CONSTRAINT fk_refresh_usuario
+    CONSTRAINT fk_usuario
         FOREIGN KEY (usuario_id)
-        REFERENCES usuario(id)
+        REFERENCES usuarios(id)
         ON DELETE CASCADE
 );
