@@ -17,8 +17,6 @@ public class RefreshTokenService {
 
     public RefreshToken create(UsuarioModel usuario) {
 
-        repository.deleteByUsuario(usuario);
-
         RefreshToken token = new RefreshToken();
         token.setUsuario(usuario);
         token.setToken(UUID.randomUUID().toString());
