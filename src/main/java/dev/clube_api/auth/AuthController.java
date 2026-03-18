@@ -5,6 +5,7 @@ import dev.clube_api.usuario.security.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +19,13 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenService refreshTokenService){
+    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenService refreshTokenService, PasswordResetService passwordResetService){
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -83,5 +86,29 @@ public class AuthController {
         String newAccessToken = jwtService.gerarToken(rt.getUsuario());
 
         return new AuthResponseDTO(newAccessToken);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        passwordResetService.forgotPassword(request.email());
+
+        return ResponseEntity.ok().body(
+                java.util.Map.of(
+                        "message",
+                        "Se o email estiver cadastrado, enviaremos as instruções para recuperação de senha."
+                )
+        );
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        passwordResetService.resetPassword(request);
+
+        return ResponseEntity.ok().body(
+                java.util.Map.of(
+                        "message",
+                        "Senha redefinida com sucesso."
+                )
+        );
     }
 }
