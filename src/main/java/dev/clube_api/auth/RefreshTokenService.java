@@ -16,6 +16,9 @@ public class RefreshTokenService {
     }
 
     public RefreshToken create(UsuarioModel usuario) {
+
+        repository.deleteByUsuario(usuario);
+
         RefreshToken token = new RefreshToken();
         token.setUsuario(usuario);
         token.setToken(UUID.randomUUID().toString());
@@ -25,13 +28,20 @@ public class RefreshTokenService {
     }
 
     public RefreshToken validate(String token) {
+        repository.deleteByExpiryDateBefore(LocalDateTime.now());
+
+        token = token.trim();
+
         RefreshToken rt = repository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Refresh token inválido"));
+                .orElseThrow(() -> new RuntimeException("Sessão expirada. Faça login novamente."));
 
         if (rt.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Refresh token expirado");
         }
 
         return rt;
+    }
+    public void delete(RefreshToken token) {
+        repository.delete(token);
     }
 }

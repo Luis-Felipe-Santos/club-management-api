@@ -76,6 +76,10 @@ public class AuthController {
 
         RefreshToken rt = refreshTokenService.validate(refreshToken);
 
+        refreshTokenService.delete(rt);
+
+        RefreshToken novo = refreshTokenService.create(rt.getUsuario());
+
         String newAccessToken = jwtService.gerarToken(rt.getUsuario());
 
         return new AuthResponseDTO(newAccessToken);
