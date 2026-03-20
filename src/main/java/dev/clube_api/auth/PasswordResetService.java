@@ -62,7 +62,7 @@ public class PasswordResetService {
 
         passwordResetTokenRepository.save(resetToken);
 
-        String resetLink = frontendUrl + "/auth/reset-password?token=" + token;
+        String resetLink = frontendUrl + "/auth/resetPassword?token=" + token;
 
         String nome = usuario.getNome() != null && !usuario.getNome().isBlank()
                 ? usuario.getNome()
