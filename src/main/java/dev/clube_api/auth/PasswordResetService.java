@@ -64,7 +64,11 @@ public class PasswordResetService {
 
         String resetLink = frontendUrl + "/auth/reset-password?token=" + token;
 
-        emailService.sendPasswordResetEmail(usuario.getEmail(), resetLink);
+        String nome = usuario.getNome() != null && !usuario.getNome().isBlank()
+                ? usuario.getNome()
+                : "usuário";
+
+        emailService.sendPasswordResetEmail(usuario.getEmail(), resetLink, nome);
     }
 
     @Transactional
