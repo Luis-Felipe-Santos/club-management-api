@@ -1,5 +1,6 @@
 package dev.clube_api.pagamento.service;
 
+import dev.clube_api.clube.repository.ClubeRepository;
 import dev.clube_api.pagamento.dto.*;
 import dev.clube_api.pagamento.enums.StatusPagamento;
 import dev.clube_api.pagamento.mapper.PagamentoMapper;
@@ -11,6 +12,7 @@ import dev.clube_api.socio.repository.SocioRepository;
 import dev.clube_api.socio_plano.model.SocioPlanoModel;
 import dev.clube_api.socio_plano.repository.SocioPlanoRepository;
 import dev.clube_api.usuario.model.UsuarioModel;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,31 +25,32 @@ public class PagamentoService {
 
     private final PagamentoRepository pagamentoRepository;
     private final SocioPlanoRepository socioPlanoRepository;
+    private final SocioRepository socioRepository;
+    private final ClubeRepository clubeRepository;
     private final PagamentoMapper pagamentoMapper;
 
     public PagamentoService(
             PagamentoRepository pagamentoRepository,
             SocioPlanoRepository socioPlanoRepository,
+            SocioRepository socioRepository,
+            ClubeRepository clubeRepository,
             PagamentoMapper pagamentoMapper
     ) {
         this.pagamentoRepository = pagamentoRepository;
         this.socioPlanoRepository = socioPlanoRepository;
+        this.socioRepository = socioRepository;
+        this.clubeRepository = clubeRepository;
         this.pagamentoMapper = pagamentoMapper;
     }
 
-    // =========================
-    // 🔹 CRIAR COBRANÇA
-    // =========================
     public PagamentoResponseDTO criar(PagamentoCreateDTO dto, UsuarioModel usuarioLogado) {
-
         SocioPlanoModel socioPlano = socioPlanoRepository.findById(dto.getSocioPlanoId())
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Vínculo sócio/plano não encontrado")
                 );
 
-        validarClube(socioPlano.getSocio(), usuarioLogado);
+        validarAcessoAoSocio(socioPlano.getSocio(), usuarioLogado);
 
-        // evita duplicidade por competência
         if (pagamentoRepository.existsBySocioPlanoAndCompetencia(
                 socioPlano,
                 dto.getCompetencia()
@@ -77,12 +80,8 @@ public class PagamentoService {
         );
     }
 
-    // =========================
-    // 🔹 QUITAR PAGAMENTO
-    // =========================
     public PagamentoResponseDTO quitar(Long pagamentoId, PagamentoQuitarDTO dto, UsuarioModel usuarioLogado) {
-
-        PagamentoModel pagamento = buscarPagamentoDoClube(pagamentoId, usuarioLogado);
+        PagamentoModel pagamento = buscarPagamentoDoUsuario(pagamentoId, usuarioLogado);
 
         if (pagamento.getStatus() == StatusPagamento.PAGO) {
             throw new IllegalStateException("Pagamento já foi quitado");
@@ -100,16 +99,12 @@ public class PagamentoService {
         );
     }
 
-    // =========================
-    // 🔹 AJUSTAR PAGAMENTO
-    // =========================
     public PagamentoResponseDTO ajustar(
             Long pagamentoId,
             PagamentoAjusteDTO dto,
             UsuarioModel usuarioLogado
     ) {
-        PagamentoModel pagamento =
-                buscarPagamentoDoClube(pagamentoId, usuarioLogado);
+        PagamentoModel pagamento = buscarPagamentoDoUsuario(pagamentoId, usuarioLogado);
 
         if (pagamento.getStatus() == StatusPagamento.PAGO) {
             throw new IllegalStateException(
@@ -117,7 +112,6 @@ public class PagamentoService {
             );
         }
 
-        // ajuste administrativo apenas
         if (dto.getDataPagamento() != null) {
             pagamento.setDataPagamento(dto.getDataPagamento());
         }
@@ -131,54 +125,64 @@ public class PagamentoService {
         );
     }
 
-    // =========================
-    // 🔹 LISTAR POR SÓCIO
-    // =========================
     public List<PagamentoResumoDTO> listarPorSocio(
             Long socioId,
             UsuarioModel usuarioLogado
     ) {
+        SocioModel socio = socioRepository.findById(socioId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Sócio não encontrado")
+                );
+
+        validarAcessoAoSocio(socio, usuarioLogado);
+
         return pagamentoRepository
                 .findBySocioPlano_Socio_IdAndSocioPlano_Socio_Clube_Id(
                         socioId,
-                        usuarioLogado.getClube().getId()
+                        socio.getClube().getId()
                 )
                 .stream()
                 .map(pagamentoMapper::toResumoDTO)
                 .toList();
     }
 
-    // =========================
-    // 🔒 MÉTODOS AUXILIARES
-    // =========================
-    private PagamentoModel buscarPagamentoDoClube(Long pagamentoId, UsuarioModel usuarioLogado) {
+    private PagamentoModel buscarPagamentoDoUsuario(Long pagamentoId, UsuarioModel usuarioLogado) {
         PagamentoModel pagamento = pagamentoRepository.findById(pagamentoId)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Pagamento não encontrado")
                 );
 
-        validarClube(pagamento.getSocioPlano().getSocio(), usuarioLogado);
+        validarAcessoAoSocio(pagamento.getSocioPlano().getSocio(), usuarioLogado);
         return pagamento;
     }
 
-    private void validarClube(SocioModel socio, UsuarioModel usuarioLogado) {
-        if (!socio.getClube().getId().equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Registro não pertence ao seu clube");
+    private void validarAcessoAoSocio(SocioModel socio, UsuarioModel usuarioLogado) {
+        if (!socio.getClube().getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Registro não pertence aos seus clubes");
         }
     }
 
     public List<InadimplenteDTO> gerarRelatorioInadimplentes(
             YearMonth competencia,
+            Long clubeId,
             UsuarioModel usuarioLogado
     ) {
+        var clube = clubeRepository.findById(clubeId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Clube não encontrado")
+                );
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
+
         return pagamentoRepository
                 .buscarInadimplentes(
                         competencia,
-                        usuarioLogado.getClube().getId()
+                        clube.getId()
                 )
                 .stream()
                 .map(pagamentoMapper::toInadimplente)
                 .toList();
     }
-
 }

@@ -13,14 +13,14 @@ import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
 import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import dev.clube_api.socio_plano.mapper.SocioPlanoMapper;
 import dev.clube_api.socio_plano.model.SocioPlanoModel;
+import dev.clube_api.socio_plano.repository.SocioPlanoRepository;
 import dev.clube_api.socio_plano_historico.enums.AcaoSocioPlano;
 import dev.clube_api.socio_plano_historico.service.SocioPlanoHistoricoService;
 import dev.clube_api.usuario.model.UsuarioModel;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import dev.clube_api.socio_plano.repository.SocioPlanoRepository;
 
 import java.util.List;
-
 
 @Service
 public class SocioPlanoService {
@@ -55,9 +55,8 @@ public class SocioPlanoService {
         PlanoModel plano = planoRepository.findById(dto.getPlanoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Plano não encontrado"));
 
-        if (!socio.getClube().getId().equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Sócio não pertence ao seu clube");
-        }
+        validarMesmoClube(socio, plano);
+        validarAcessoAoClube(socio.getClube().getAdmin().getId(), usuarioLogado);
 
         if (socioPlanoRepository.existsBySocioAndPlanoAndStatus(socio, plano, StatusSocioPlano.ATIVO)) {
             throw new IllegalStateException("Sócio já está ativo neste plano");
@@ -68,7 +67,14 @@ public class SocioPlanoService {
 
         SocioPlanoModel salvo = socioPlanoRepository.save(sp);
 
-        historicoService.registrar(salvo, null, StatusSocioPlano.ATIVO, AcaoSocioPlano.VINCULO, usuarioLogado);
+        historicoService.registrar(
+                salvo,
+                null,
+                StatusSocioPlano.ATIVO,
+                AcaoSocioPlano.VINCULO,
+                usuarioLogado
+        );
+
         return socioPlanoMapper.toResponseDTO(salvo);
     }
 
@@ -76,9 +82,7 @@ public class SocioPlanoService {
         SocioModel socio = socioRepository.findById(socioId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sócio não encontrado"));
 
-        if (!socio.getClube().getId().equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Sócio não pertence ao seu clube");
-        }
+        validarAcessoAoClube(socio.getClube().getAdmin().getId(), usuarioLogado);
 
         return socioPlanoRepository.findBySocio(socio)
                 .stream()
@@ -90,9 +94,7 @@ public class SocioPlanoService {
             SocioModel socio,
             UsuarioModel usuarioLogado
     ) {
-        if (!socio.getClube().getId().equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Sócio não pertence ao seu clube");
-        }
+        validarAcessoAoClube(socio.getClube().getAdmin().getId(), usuarioLogado);
 
         return socioPlanoRepository.findBySocio(socio)
                 .stream()
@@ -104,43 +106,24 @@ public class SocioPlanoService {
         PlanoModel plano = planoRepository.findById(planoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Plano não encontrado"));
 
-        if (!plano.getClube().getId().equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Plano não pertence ao seu clube");
-        }
+        validarAcessoAoClube(plano.getClube().getAdmin().getId(), usuarioLogado);
 
         return socioPlanoRepository
                 .findByPlanoAndStatusAndSocio_Clube_Id(
                         plano,
                         StatusSocioPlano.ATIVO,
-                        usuarioLogado.getClube().getId()
+                        plano.getClube().getId()
                 )
                 .stream()
                 .map(sp -> socioMapper.toResumoDTO(sp.getSocio()))
                 .toList();
     }
 
-
-        private SocioPlanoModel buscarVinculoDoClube(Long socioPlanoId, UsuarioModel usuarioLogado) {
-        SocioPlanoModel sp = socioPlanoRepository.findById(socioPlanoId)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException("Vínculo não encontrado")
-                );
-
-        if (!sp.getSocio().getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Vínculo não pertence ao seu clube");
-        }
-
-        return sp;
-    }
     public SocioPlanoResponseDTO suspender(Long socioPlanoId, UsuarioModel usuarioLogado) {
-        SocioPlanoModel sp =
-                buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+        SocioPlanoModel sp = buscarVinculoDoUsuario(socioPlanoId, usuarioLogado);
 
         if (sp.getStatus() != StatusSocioPlano.ATIVO) {
-            throw new IllegalStateException(
-                    "Só é possível suspender um plano ATIVO"
-            );
+            throw new IllegalStateException("Só é possível suspender um plano ATIVO");
         }
 
         StatusSocioPlano statusAnterior = sp.getStatus();
@@ -149,17 +132,22 @@ public class SocioPlanoService {
 
         SocioPlanoModel salvo = socioPlanoRepository.save(sp);
 
-        historicoService.registrar(salvo, statusAnterior, StatusSocioPlano.SUSPENSO, AcaoSocioPlano.SUSPENSAO, usuarioLogado);
+        historicoService.registrar(
+                salvo,
+                statusAnterior,
+                StatusSocioPlano.SUSPENSO,
+                AcaoSocioPlano.SUSPENSAO,
+                usuarioLogado
+        );
 
         return socioPlanoMapper.toResponseDTO(salvo);
     }
+
     public SocioPlanoResponseDTO cancelar(Long socioPlanoId, UsuarioModel usuarioLogado) {
-        SocioPlanoModel sp = buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+        SocioPlanoModel sp = buscarVinculoDoUsuario(socioPlanoId, usuarioLogado);
 
         if (sp.getStatus() == StatusSocioPlano.CANCELADO) {
-            throw new IllegalStateException(
-                    "Plano já está cancelado"
-            );
+            throw new IllegalStateException("Plano já está cancelado");
         }
 
         StatusSocioPlano statusAnterior = sp.getStatus();
@@ -180,12 +168,10 @@ public class SocioPlanoService {
     }
 
     public SocioPlanoResponseDTO reativar(Long socioPlanoId, UsuarioModel usuarioLogado) {
-        SocioPlanoModel sp = buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+        SocioPlanoModel sp = buscarVinculoDoUsuario(socioPlanoId, usuarioLogado);
 
         if (sp.getStatus() != StatusSocioPlano.SUSPENSO) {
-            throw new IllegalStateException(
-                    "Só é possível reativar planos SUSPENSOS"
-            );
+            throw new IllegalStateException("Só é possível reativar planos SUSPENSOS");
         }
 
         StatusSocioPlano statusAnterior = sp.getStatus();
@@ -206,25 +192,20 @@ public class SocioPlanoService {
     }
 
     public SocioPlanoResponseDTO alterarPlano(Long socioPlanoId, Long novoPlanoId, UsuarioModel usuarioLogado) {
-
-        SocioPlanoModel atual =
-                buscarVinculoDoClube(socioPlanoId, usuarioLogado);
+        SocioPlanoModel atual = buscarVinculoDoUsuario(socioPlanoId, usuarioLogado);
 
         if (atual.getStatus() != StatusSocioPlano.ATIVO) {
-            throw new IllegalStateException(
-                    "Só é possível alterar um plano ATIVO"
-            );
+            throw new IllegalStateException("Só é possível alterar um plano ATIVO");
         }
 
         PlanoModel novoPlano = planoRepository.findById(novoPlanoId)
-                .orElseThrow(() ->
-                        new RecursoNaoEncontradoException("Novo plano não encontrado")
-                );
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Novo plano não encontrado"));
 
-        if (!novoPlano.getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Plano não pertence ao seu clube");
+        if (!novoPlano.getClube().getId().equals(atual.getSocio().getClube().getId())) {
+            throw new IllegalArgumentException("O novo plano deve pertencer ao mesmo clube do sócio");
         }
+
+        validarAcessoAoClube(novoPlano.getClube().getAdmin().getId(), usuarioLogado);
 
         StatusSocioPlano statusAnterior = atual.getStatus();
         atual.setStatus(StatusSocioPlano.CANCELADO);
@@ -238,9 +219,7 @@ public class SocioPlanoService {
                 usuarioLogado
         );
 
-        SocioPlanoModel novoVinculo =
-                socioPlanoMapper.toEntity(atual.getSocio(), novoPlano);
-
+        SocioPlanoModel novoVinculo = socioPlanoMapper.toEntity(atual.getSocio(), novoPlano);
         novoVinculo.setStatus(StatusSocioPlano.ATIVO);
 
         SocioPlanoModel salvo = socioPlanoRepository.save(novoVinculo);
@@ -256,5 +235,26 @@ public class SocioPlanoService {
         return socioPlanoMapper.toResponseDTO(salvo);
     }
 
+    private SocioPlanoModel buscarVinculoDoUsuario(Long socioPlanoId, UsuarioModel usuarioLogado) {
+        SocioPlanoModel sp = socioPlanoRepository.findById(socioPlanoId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Vínculo não encontrado")
+                );
 
+        validarAcessoAoClube(sp.getSocio().getClube().getAdmin().getId(), usuarioLogado);
+
+        return sp;
+    }
+
+    private void validarAcessoAoClube(Long adminIdDoClube, UsuarioModel usuarioLogado) {
+        if (!adminIdDoClube.equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
+    }
+
+    private void validarMesmoClube(SocioModel socio, PlanoModel plano) {
+        if (!socio.getClube().getId().equals(plano.getClube().getId())) {
+            throw new IllegalArgumentException("Sócio e plano devem pertencer ao mesmo clube");
+        }
+    }
 }

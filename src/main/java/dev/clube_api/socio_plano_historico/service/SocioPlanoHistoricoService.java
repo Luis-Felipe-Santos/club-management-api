@@ -1,6 +1,5 @@
 package dev.clube_api.socio_plano_historico.service;
 
-
 import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
 import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import dev.clube_api.socio_plano.model.SocioPlanoModel;
@@ -9,6 +8,7 @@ import dev.clube_api.socio_plano_historico.enums.AcaoSocioPlano;
 import dev.clube_api.socio_plano_historico.model.SocioPlanoHistoricoModel;
 import dev.clube_api.socio_plano_historico.repository.SocioPlanoHistoricoRepository;
 import dev.clube_api.usuario.model.UsuarioModel;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -54,9 +54,8 @@ public class SocioPlanoHistoricoService {
                         new RecursoNaoEncontradoException("Vínculo não encontrado")
                 );
 
-        if (!socioPlano.getSocio().getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Acesso negado");
+        if (!socioPlano.getSocio().getClube().getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Acesso negado");
         }
 
         return repository.findBySocioPlanoOrderByCreatedAtDesc(socioPlano);

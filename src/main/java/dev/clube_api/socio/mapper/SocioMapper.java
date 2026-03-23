@@ -25,8 +25,6 @@ public class SocioMapper {
         socio.setEmail(dto.getEmail());
         socio.setEndereco(dto.getEndereco());
         socio.setImagemUrl(dto.getImagemUrl());
-
-        socio.setStatus(StatusSocio.ATIVO);
         socio.setClube(clube);
 
         return socio;

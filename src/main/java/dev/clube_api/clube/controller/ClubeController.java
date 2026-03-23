@@ -16,7 +16,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/clubes")
-public class ClubeController{
+public class ClubeController {
+
     private final ClubeService clubeService;
     private final UsuarioService usuarioService;
 
@@ -25,12 +26,11 @@ public class ClubeController{
         this.usuarioService = usuarioService;
     }
 
-
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClubeResponseDTO> criar(
             @RequestBody @Valid ClubeCreateDTO dto,
-           Authentication authentication
+            Authentication authentication
     ) {
         String email = authentication.getName();
         UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
@@ -40,8 +40,8 @@ public class ClubeController{
         );
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     public ResponseEntity<ClubeResponseDTO> buscarPorId(
             @PathVariable Long id,
             Authentication authentication
@@ -52,7 +52,6 @@ public class ClubeController{
         return ResponseEntity.ok(
                 clubeService.buscarPorId(id, usuarioLogado)
         );
-
     }
 
     @GetMapping
@@ -64,36 +63,58 @@ public class ClubeController{
         return ResponseEntity.ok(
                 clubeService.listarPorUsuario(usuarioLogado)
         );
-
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClubeResponseDTO> atualizar(
             @PathVariable Long id,
-            @RequestBody ClubeUpdateDTO dto
+            @RequestBody ClubeUpdateDTO dto,
+            Authentication authentication
     ) {
-        ClubeResponseDTO response = clubeService.atualizar(id, dto);
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        ClubeResponseDTO response = clubeService.atualizar(id, dto, usuarioLogado);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/inativar")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> inativar(@PathVariable Long id) {
-            clubeService.inativar(id);
-            return ResponseEntity.ok("Clube inativado com sucesso");
+    public ResponseEntity<String> inativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        clubeService.inativar(id, usuarioLogado);
+        return ResponseEntity.ok("Clube inativado com sucesso");
     }
+
     @PatchMapping("/{id}/bloquear")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> bloquear(@PathVariable Long id) {
-        clubeService.bloquear(id);
+    public ResponseEntity<String> bloquear(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        clubeService.bloquear(id, usuarioLogado);
         return ResponseEntity.ok("Clube bloqueado com sucesso");
     }
 
     @PatchMapping("/{id}/reativar")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> reativar(@PathVariable Long id) {
-        clubeService.reativar(id);
+    public ResponseEntity<String> reativar(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String email = authentication.getName();
+        UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(email);
+
+        clubeService.reativar(id, usuarioLogado);
         return ResponseEntity.ok("Clube reativado com sucesso");
     }
 }

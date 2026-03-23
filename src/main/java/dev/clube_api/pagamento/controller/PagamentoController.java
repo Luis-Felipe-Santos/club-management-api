@@ -82,18 +82,22 @@ public class PagamentoController {
                 pagamentoService.listarPorSocio(socioId, usuarioLogado)
         );
     }
+
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/relatorios/inadimplentes")
     public ResponseEntity<List<InadimplenteDTO>> inadimplentes(
             @RequestParam YearMonth competencia,
+            @RequestParam Long clubeId,
             Authentication authentication
     ) {
-        UsuarioModel usuario =
+        UsuarioModel usuarioLogado =
                 usuarioService.buscarPorEmail(authentication.getName());
 
         return ResponseEntity.ok(
                 pagamentoService.gerarRelatorioInadimplentes(
                         competencia,
-                        usuario
+                        clubeId,
+                        usuarioLogado
                 )
         );
     }

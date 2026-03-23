@@ -12,6 +12,7 @@ import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio.repository.SocioRepository;
 import dev.clube_api.usuario.model.UsuarioModel;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,20 +24,20 @@ public class DependenteService {
     private final SocioRepository socioRepository;
     private final DependenteMapper dependenteMapper;
 
-    public DependenteService(DependenteRepository dependenteRepository, SocioRepository socioRepository, DependenteMapper dependenteMapper) {
+    public DependenteService(
+            DependenteRepository dependenteRepository,
+            SocioRepository socioRepository,
+            DependenteMapper dependenteMapper
+    ) {
         this.dependenteRepository = dependenteRepository;
         this.socioRepository = socioRepository;
         this.dependenteMapper = dependenteMapper;
     }
 
     public DependenteResponseDTO criar(DependenteCreateDTO dto, UsuarioModel usuarioLogado) {
-        validarUsuarioComClube(usuarioLogado);
+        SocioModel socio = buscarSocioDoUsuario(dto.getSocioId(), usuarioLogado);
 
-        SocioModel socio = buscarSocioDoClube(dto.getSocioId(), usuarioLogado);
-
-        DependenteModel dependente =
-                dependenteMapper.toEntity(dto, socio);
-
+        DependenteModel dependente = dependenteMapper.toEntity(dto, socio);
         dependente.setStatus(StatusDependente.ATIVO);
 
         return dependenteMapper.toResponseDTO(
@@ -45,9 +46,7 @@ public class DependenteService {
     }
 
     public List<DependenteResumoDTO> listarPorSocio(Long socioId, UsuarioModel usuarioLogado) {
-        validarUsuarioComClube(usuarioLogado);
-
-        SocioModel socio = buscarSocioDoClube(socioId, usuarioLogado);
+        SocioModel socio = buscarSocioDoUsuario(socioId, usuarioLogado);
 
         return dependenteRepository.findBySocio(socio)
                 .stream()
@@ -56,18 +55,13 @@ public class DependenteService {
     }
 
     public DependenteResponseDTO buscarPorId(Long dependenteId, UsuarioModel usuarioLogado) {
-        validarUsuarioComClube(usuarioLogado);
-
-        DependenteModel dependente = buscarDependenteDoClube(dependenteId, usuarioLogado);
+        DependenteModel dependente = buscarDependenteDoUsuario(dependenteId, usuarioLogado);
 
         return dependenteMapper.toResponseDTO(dependente);
     }
 
     public DependenteResponseDTO atualizar(Long dependenteId, DependenteUpdateDTO dto, UsuarioModel usuarioLogado) {
-        validarUsuarioComClube(usuarioLogado);
-
-        DependenteModel dependente =
-                buscarDependenteDoClube(dependenteId, usuarioLogado);
+        DependenteModel dependente = buscarDependenteDoUsuario(dependenteId, usuarioLogado);
 
         dependenteMapper.updateEntity(dependente, dto);
 
@@ -77,56 +71,40 @@ public class DependenteService {
     }
 
     public void inativar(Long dependenteId, UsuarioModel usuarioLogado) {
-        DependenteModel dependente =
-                buscarDependenteDoClube(dependenteId, usuarioLogado);
+        DependenteModel dependente = buscarDependenteDoUsuario(dependenteId, usuarioLogado);
 
         dependente.setStatus(StatusDependente.INATIVO);
         dependenteRepository.save(dependente);
     }
 
     public void reativar(Long dependenteId, UsuarioModel usuarioLogado) {
-        DependenteModel dependente =
-                buscarDependenteDoClube(dependenteId, usuarioLogado);
+        DependenteModel dependente = buscarDependenteDoUsuario(dependenteId, usuarioLogado);
 
         dependente.setStatus(StatusDependente.ATIVO);
         dependenteRepository.save(dependente);
     }
 
-    private void validarUsuarioComClube(UsuarioModel usuarioLogado) {
-        if (usuarioLogado.getClube() == null) {
-            throw new SecurityException(
-                    "Usuário não está vinculado a um clube"
-            );
-        }
-    }
-
-    private SocioModel buscarSocioDoClube(Long socioId, UsuarioModel usuarioLogado) {
+    private SocioModel buscarSocioDoUsuario(Long socioId, UsuarioModel usuarioLogado) {
         SocioModel socio = socioRepository.findById(socioId)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Sócio não encontrado")
                 );
 
-        if (!socio.getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException(
-                    "Sócio não pertence ao seu clube"
-            );
+        if (!socio.getClube().getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este sócio");
         }
 
         return socio;
     }
 
-    private DependenteModel buscarDependenteDoClube(Long dependenteId, UsuarioModel usuarioLogado) {
+    private DependenteModel buscarDependenteDoUsuario(Long dependenteId, UsuarioModel usuarioLogado) {
         DependenteModel dependente = dependenteRepository.findById(dependenteId)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Dependente não encontrado")
                 );
 
-        if (!dependente.getSocio().getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException(
-                    "Dependente não pertence ao seu clube"
-            );
+        if (!dependente.getSocio().getClube().getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este dependente");
         }
 
         return dependente;
