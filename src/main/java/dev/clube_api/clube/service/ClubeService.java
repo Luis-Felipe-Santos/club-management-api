@@ -15,6 +15,7 @@ import dev.clube_api.usuario.repository.UsuarioRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -31,9 +32,6 @@ public class ClubeService {
     }
 
     public ClubeResponseDTO criarClube(ClubeCreateDTO dto, UsuarioModel usuarioLogado) {
-        if (usuarioLogado.getClube() != null) {
-            throw new IllegalStateException("Usuário já pertence a um clube");
-        }
 
         if (clubeRepository.existsByCnpj(dto.getCnpj())) {
             throw new IllegalArgumentException("Já existe um clube com este CNPJ");
@@ -41,12 +39,15 @@ public class ClubeService {
 
         ClubeModel clube = clubeMapper.toEntity(dto);
         clube.setAdmin(usuarioLogado);
+        clube.setStatus(StatusClube.ATIVO);
+        clube.setDataCadastro(LocalDateTime.now());
 
         ClubeModel salvo = clubeRepository.save(clube);
-        usuarioLogado.setClube(salvo);
-        usuarioLogado.setRole(RoleUsuario.ADMIN);
 
-        usuarioRepository.save(usuarioLogado);
+        if (usuarioLogado.getRole() != RoleUsuario.ADMIN) {
+            usuarioLogado.setRole(RoleUsuario.ADMIN);
+            usuarioRepository.save(usuarioLogado);
+        }
 
         return clubeMapper.toResponseDTO(salvo);
     }
@@ -54,21 +55,17 @@ public class ClubeService {
     public ClubeResponseDTO buscarPorId(Long id, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
-        if (!clube.getId().equals(usuarioLogado.getClube().getId())) {
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId()))  {
             throw new AccessDeniedException("Você não tem acesso a este clube");
         }
         return clubeMapper.toResponseDTO(clube);
     }
 
     public List<ClubeResponseDTO> listarPorUsuario(UsuarioModel usuarioLogado) {
-
-        if (usuarioLogado.getClube() == null) {
-            return List.of();
-        }
-
-        return List.of(
-                clubeMapper.toResponseDTO(usuarioLogado.getClube())
-        );
+        return clubeRepository.findByAdmin(usuarioLogado)
+                .stream()
+                .map(clubeMapper::toResponseDTO)
+                .toList();
     }
 
     public ClubeResponseDTO atualizar(Long id, ClubeUpdateDTO dto) {
