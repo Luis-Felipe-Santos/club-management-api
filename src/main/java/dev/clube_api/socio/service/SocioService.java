@@ -45,7 +45,7 @@ public class SocioService {
         );
     }
 
-    public List<SocioResumoDTO> listarPorClube(UsuarioModel usuarioLogado) {
+    public List<SocioResumoDTO> listarPorClube(Long clubeId, UsuarioModel usuarioLogado){
         validarUsuarioComClube(usuarioLogado);
 
         return socioRepository

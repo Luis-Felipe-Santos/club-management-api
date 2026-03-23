@@ -34,7 +34,7 @@ public class PagamentoModel {
     @JoinColumn(name = "socio_plano_id", nullable = false)
     private SocioPlanoModel socioPlano;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 7)
     private YearMonth competencia;
 
     @Column(nullable = false)
@@ -56,3 +56,5 @@ public class PagamentoModel {
     private String observacao;
 
 }
+
+

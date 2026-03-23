@@ -17,7 +17,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    public UsuarioController(UsuarioService usuarioService){
+    public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 
@@ -34,12 +34,12 @@ public class UsuarioController {
                 usuarioService.criar(dto, usuarioLogado)
         );
     }
+
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponseDTO> usuarioLogado(
             Authentication authentication
     ) {
-
         return ResponseEntity.ok(
                 usuarioService.buscarUsuarioLogado(authentication.getName())
         );
@@ -47,28 +47,17 @@ public class UsuarioController {
 
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> buscarPorID(
-            @PathVariable Long id,
-            Authentication authentication
-    ) {
-        UsuarioModel usuarioLogado =
-                usuarioService.buscarPorEmail(authentication.getName());
-
+    public ResponseEntity<UsuarioResponseDTO> buscarPorID(@PathVariable Long id) {
         return ResponseEntity.ok(
-                usuarioService.buscarPorId(id, usuarioLogado)
+                usuarioService.buscarPorId(id)
         );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     @GetMapping
-    public ResponseEntity<List<UsuarioResponseDTO>> listar(
-            Authentication authentication
-    ) {
-        UsuarioModel usuarioLogado =
-                usuarioService.buscarPorEmail(authentication.getName());
-
+    public ResponseEntity<List<UsuarioResponseDTO>> listar() {
         return ResponseEntity.ok(
-                usuarioService.listarPorClube(usuarioLogado)
+                usuarioService.listarTodos()
         );
     }
 

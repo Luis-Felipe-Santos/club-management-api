@@ -12,15 +12,21 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CadastroService {
+
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioMapper usuarioMapper;
 
-    public CadastroService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper){
+    public CadastroService(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            UsuarioMapper usuarioMapper
+    ) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
     }
+
     public UsuarioResponseDTO cadastrar(CadastroRequestDTO dto) {
 
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
@@ -38,11 +44,9 @@ public class CadastroService {
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setRole(RoleUsuario.ADMIN);
         usuario.setStatus(StatusUsuario.ATIVO);
-        usuario.setClube(null);
 
         UsuarioModel salvo = usuarioRepository.save(usuario);
 
         return usuarioMapper.toResponseDTO(salvo);
     }
 }
-

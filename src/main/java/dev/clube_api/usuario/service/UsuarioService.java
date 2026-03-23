@@ -1,7 +1,5 @@
 package dev.clube_api.usuario.service;
 
-import dev.clube_api.clube.model.ClubeModel;
-import dev.clube_api.clube.repository.ClubeRepository;
 import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
 import dev.clube_api.usuario.dto.*;
 import dev.clube_api.usuario.enums.StatusUsuario;
@@ -17,18 +15,20 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final ClubeRepository clubeRepository;
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, ClubeRepository clubeRepository, UsuarioMapper usuarioMapper, PasswordEncoder passwordEncoder){
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            UsuarioMapper usuarioMapper,
+            PasswordEncoder passwordEncoder
+    ) {
         this.usuarioRepository = usuarioRepository;
-        this.clubeRepository = clubeRepository;
         this.usuarioMapper = usuarioMapper;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UsuarioResponseDTO criar(UsuarioCreateDTO dto, UsuarioModel usuarioLogado){
+    public UsuarioResponseDTO criar(UsuarioCreateDTO dto, UsuarioModel usuarioLogado) {
         if (usuarioRepository.existsByCpf(dto.getCpf())) {
             throw new IllegalArgumentException("CPF já cadastrado");
         }
@@ -37,19 +37,15 @@ public class UsuarioService {
             throw new IllegalArgumentException("E-mail já cadastrado");
         }
 
-        UsuarioModel usuario = usuarioMapper.toEntity(
-                dto,
-                usuarioLogado.getClube()
-        );
-
+        UsuarioModel usuario = usuarioMapper.toEntity(dto);
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
         UsuarioModel salvo = usuarioRepository.save(usuario);
 
         return usuarioMapper.toResponseDTO(salvo);
     }
-    public UsuarioResponseDTO buscarUsuarioLogado(String email) {
 
+    public UsuarioResponseDTO buscarUsuarioLogado(String email) {
         UsuarioModel usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Usuário não encontrado")
@@ -58,13 +54,8 @@ public class UsuarioService {
         return usuarioMapper.toResponseDTO(usuario);
     }
 
-    public List<UsuarioResponseDTO> listarPorClube(UsuarioModel usuarioLogado) {
-
-        if (usuarioLogado.getClube() == null) {
-            throw new SecurityException("Usuário não está vinculado a um clube");
-        }
-
-        return usuarioRepository.findByClube(usuarioLogado.getClube())
+    public List<UsuarioResponseDTO> listarTodos() {
+        return usuarioRepository.findAll()
                 .stream()
                 .map(usuarioMapper::toResponseDTO)
                 .toList();
@@ -77,27 +68,16 @@ public class UsuarioService {
                 );
     }
 
-    public UsuarioResponseDTO buscarPorId(
-            Long id,
-            UsuarioModel usuarioLogado
-    ) {
+    public UsuarioResponseDTO buscarPorId(Long id) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Usuário não encontrado")
                 );
 
-        if (!usuario.getClube().getId()
-                .equals(usuarioLogado.getClube().getId())) {
-            throw new SecurityException("Usuário não pertence ao seu clube");
-        }
-
         return usuarioMapper.toResponseDTO(usuario);
     }
 
-
-
-
-    public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto){
+    public UsuarioResponseDTO atualizar(Long id, UsuarioUpdateDTO dto) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
@@ -106,16 +86,16 @@ public class UsuarioService {
         UsuarioModel atualizado = usuarioRepository.save(usuario);
 
         return usuarioMapper.toResponseDTO(atualizado);
-
     }
+
     public UsuarioModel buscarPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new RecursoNaoEncontradoException("Usuário não encontrado")
                 );
     }
-    public void atualizarSenha(Long id, UsuarioSenhaUpdateDTO dto) {
 
+    public void atualizarSenha(Long id, UsuarioSenhaUpdateDTO dto) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
@@ -123,10 +103,8 @@ public class UsuarioService {
 
         usuarioRepository.save(usuario);
     }
-    public UsuarioResponseDTO atualizarPermissoes(
-            Long id,
-            UsuarioAdminUpdateDTO dto
-    ) {
+
+    public UsuarioResponseDTO atualizarPermissoes(Long id, UsuarioAdminUpdateDTO dto) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
@@ -149,16 +127,16 @@ public class UsuarioService {
 
         usuario.setStatus(StatusUsuario.INATIVO);
         usuarioRepository.save(usuario);
-
     }
+
     public void bloquear(Long id) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         usuario.setStatus(StatusUsuario.BLOQUEADO);
         usuarioRepository.save(usuario);
-
     }
+
     public void desbloquear(Long id) {
         UsuarioModel usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
@@ -166,5 +144,4 @@ public class UsuarioService {
         usuario.setStatus(StatusUsuario.ATIVO);
         usuarioRepository.save(usuario);
     }
-
 }

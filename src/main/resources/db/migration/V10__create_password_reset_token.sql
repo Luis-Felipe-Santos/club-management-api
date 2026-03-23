@@ -6,4 +6,4 @@ CREATE TABLE password_reset_token (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_password_reset_token_usuario
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
+)

@@ -1,7 +1,6 @@
 package dev.clube_api.usuario.model;
 
 
-import dev.clube_api.clube.model.ClubeModel;
 import dev.clube_api.usuario.enums.RoleUsuario;
 import dev.clube_api.usuario.enums.StatusUsuario;
 import jakarta.persistence.*;
@@ -21,8 +20,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioModel implements UserDetails {
+
     @Id
-    @Column(name="id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -42,41 +41,40 @@ public class UsuarioModel implements UserDetails {
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "permissao")
+    @Column(name = "permissao", nullable = false)
     private RoleUsuario role;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private StatusUsuario status;
-
-
-    @ManyToOne
-    @JoinColumn(name="clube_id", nullable = true)
-    private ClubeModel clube;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
+
     @Override
     public String getUsername() {
         return email;
     }
+
     @Override
     public String getPassword() {
         return senha;
     }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
+
     @Override
     public boolean isAccountNonLocked() {
         return status != StatusUsuario.BLOQUEADO;
     }
+
     @Override
     public boolean isEnabled() {
         return status == StatusUsuario.ATIVO;
     }
-
 }

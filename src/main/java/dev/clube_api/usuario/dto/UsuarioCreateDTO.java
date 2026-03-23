@@ -34,5 +34,4 @@ public class UsuarioCreateDTO {
     private RoleUsuario role;
 
 
-    private Long clubeId;
 }

@@ -47,13 +47,14 @@ public class SocioController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     public ResponseEntity<List<SocioResumoDTO>> listar(
+            @RequestParam Long clubeId,
             Authentication authentication
     ) {
         UsuarioModel usuarioLogado =
                 usuarioService.buscarPorEmail(authentication.getName());
 
         return ResponseEntity.ok(
-                socioService.listarPorClube(usuarioLogado)
+                socioService.listarPorClube(clubeId, usuarioLogado)
         );
     }
 

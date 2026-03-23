@@ -17,4 +17,6 @@ public class ClubeResponseDTO {
     private  String cnpj;
     private StatusClube status;
     private LocalDateTime dataCadastro;
+    private Long usuarioAdminId;
+    private String nomeAdmin;
 }

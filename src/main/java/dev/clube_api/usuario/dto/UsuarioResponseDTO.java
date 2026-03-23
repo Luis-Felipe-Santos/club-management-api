@@ -21,7 +21,4 @@ public class UsuarioResponseDTO {
 
     private RoleUsuario role;
     private StatusUsuario status;
-
-    private Long clubeId;
-    private String nomeClube;
 }

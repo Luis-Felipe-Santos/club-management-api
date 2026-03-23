@@ -33,4 +33,7 @@ public class SocioCreateDTO {
     private String endereco;
 
     private String imagemUrl;
+
+    @NotNull
+    private Long clubeId;
 }

@@ -1,6 +1,5 @@
 package dev.clube_api.clube.service;
 
-
 import dev.clube_api.clube.dto.ClubeCreateDTO;
 import dev.clube_api.clube.dto.ClubeResponseDTO;
 import dev.clube_api.clube.dto.ClubeUpdateDTO;
@@ -9,9 +8,7 @@ import dev.clube_api.clube.mapper.ClubeMapper;
 import dev.clube_api.clube.model.ClubeModel;
 import dev.clube_api.clube.repository.ClubeRepository;
 import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
-import dev.clube_api.usuario.enums.RoleUsuario;
 import dev.clube_api.usuario.model.UsuarioModel;
-import dev.clube_api.usuario.repository.UsuarioRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +20,10 @@ public class ClubeService {
 
     private final ClubeRepository clubeRepository;
     private final ClubeMapper clubeMapper;
-    private final UsuarioRepository usuarioRepository;
 
-    public ClubeService(ClubeRepository clubeRepository, ClubeMapper clubeMapper, UsuarioRepository usuarioRepository) {
+    public ClubeService(ClubeRepository clubeRepository, ClubeMapper clubeMapper) {
         this.clubeRepository = clubeRepository;
         this.clubeMapper = clubeMapper;
-        this.usuarioRepository = usuarioRepository;
     }
 
     public ClubeResponseDTO criarClube(ClubeCreateDTO dto, UsuarioModel usuarioLogado) {
@@ -44,20 +39,17 @@ public class ClubeService {
 
         ClubeModel salvo = clubeRepository.save(clube);
 
-        if (usuarioLogado.getRole() != RoleUsuario.ADMIN) {
-            usuarioLogado.setRole(RoleUsuario.ADMIN);
-            usuarioRepository.save(usuarioLogado);
-        }
-
         return clubeMapper.toResponseDTO(salvo);
     }
 
     public ClubeResponseDTO buscarPorId(Long id, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
-        if (!clube.getAdmin().getId().equals(usuarioLogado.getId()))  {
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
             throw new AccessDeniedException("Você não tem acesso a este clube");
         }
+
         return clubeMapper.toResponseDTO(clube);
     }
 
@@ -68,39 +60,53 @@ public class ClubeService {
                 .toList();
     }
 
-    public ClubeResponseDTO atualizar(Long id, ClubeUpdateDTO dto) {
+    public ClubeResponseDTO atualizar(Long id, ClubeUpdateDTO dto, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
 
         clubeMapper.updateEntity(clube, dto);
 
         ClubeModel atualizado = clubeRepository.save(clube);
         return clubeMapper.toResponseDTO(atualizado);
     }
-    public void inativar(Long id) {
+
+    public void inativar(Long id, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
 
         clube.setStatus(StatusClube.INATIVO);
         clubeRepository.save(clube);
     }
-    public void bloquear(Long id) {
+
+    public void bloquear(Long id, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
 
         clube.setStatus(StatusClube.BLOQUEADO);
         clubeRepository.save(clube);
     }
-    public void reativar(Long id) {
+
+    public void reativar(Long id, UsuarioModel usuarioLogado) {
         ClubeModel clube = clubeRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Clube não encontrado"));
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
 
         clube.setStatus(StatusClube.ATIVO);
         clubeRepository.save(clube);
     }
-
-
-
-
-
 }
