@@ -30,7 +30,7 @@ public class SocioPlanoHistoricoModel {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_anterior", nullable = false)
+    @Column(name = "status_anterior")
     private StatusSocioPlano statusAnterior;
 
     @Enumerated(EnumType.STRING)

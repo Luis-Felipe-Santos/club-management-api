@@ -17,6 +17,7 @@ import dev.clube_api.socio_plano.repository.SocioPlanoRepository;
 import dev.clube_api.socio_plano_historico.enums.AcaoSocioPlano;
 import dev.clube_api.socio_plano_historico.service.SocioPlanoHistoricoService;
 import dev.clube_api.usuario.model.UsuarioModel;
+import jakarta.transaction.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -48,6 +49,7 @@ public class SocioPlanoService {
         this.socioMapper = socioMapper;
     }
 
+    @Transactional
     public SocioPlanoResponseDTO vincular(SocioPlanoCreateDTO dto, UsuarioModel usuarioLogado) {
         SocioModel socio = socioRepository.findById(dto.getSocioId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sócio não encontrado"));
