@@ -27,7 +27,6 @@ public class SecurityConfig {
         this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
-    // 🔑 regras globais de segurança
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -44,6 +43,7 @@ public class SecurityConfig {
 
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
                         .requestMatchers("/auth/login","/auth/refresh","/auth/forgot-password",
                                 "/auth/reset-password", "/cadastro").permitAll()
@@ -54,7 +54,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 🔐 encoder de senha (usado no UsuarioService)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

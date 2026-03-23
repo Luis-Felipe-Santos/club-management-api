@@ -20,7 +20,7 @@ public class CorsConfig {
                                 System.getenv("FRONTEND_URL"),
                                 "http://localhost:3000"
                         )
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
