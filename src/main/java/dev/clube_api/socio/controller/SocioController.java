@@ -4,14 +4,19 @@ import dev.clube_api.socio.dto.SocioCreateDTO;
 import dev.clube_api.socio.dto.SocioResponseDTO;
 import dev.clube_api.socio.dto.SocioResumoDTO;
 import dev.clube_api.socio.dto.SocioUpdateDTO;
+import dev.clube_api.socio.imagem.dto.SignedUrlResponseDTO;
+import dev.clube_api.socio.imagem.dto.UploadImagemResponseDTO;
+import dev.clube_api.socio.imagem.service.SocioImagemService;
 import dev.clube_api.socio.service.SocioService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import dev.clube_api.usuario.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,13 +25,16 @@ import java.util.List;
 public class SocioController {
 
     private final SocioService socioService;
+    private final SocioImagemService socioImagemService;
     private final UsuarioService usuarioService;
 
     public SocioController(
             SocioService socioService,
+            SocioImagemService socioImagemService,
             UsuarioService usuarioService
     ) {
         this.socioService = socioService;
+        this.socioImagemService = socioImagemService;
         this.usuarioService = usuarioService;
     }
 
@@ -87,7 +95,6 @@ public class SocioController {
         );
     }
 
-
     @PatchMapping("/{id}/inativar")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> inativar(
@@ -125,5 +132,26 @@ public class SocioController {
 
         socioService.reativar(id, usuarioLogado);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/upload-imagem", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UploadImagemResponseDTO> uploadImagem(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("clubeId") Long clubeId
+    ) {
+        return ResponseEntity.ok(
+                socioImagemService.uploadImagem(file, clubeId)
+        );
+    }
+
+    @GetMapping("/imagem/signed-url")
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    public ResponseEntity<SignedUrlResponseDTO> gerarSignedUrl(
+            @RequestParam("path") String path
+    ) {
+        return ResponseEntity.ok(
+                socioImagemService.gerarSignedUrl(path)
+        );
     }
 }
