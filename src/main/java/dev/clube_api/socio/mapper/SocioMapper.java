@@ -56,6 +56,8 @@ public class SocioMapper {
         dto.setNome(socio.getNome());
         dto.setDocumento(socio.getDocumento());
         dto.setTelefone(socio.getTelefone());
+        dto.setEmail(socio.getEmail());
+        dto.setImagemUrl(socio.getImagemUrl());
         dto.setStatus(socio.getStatus());
 
         return dto;

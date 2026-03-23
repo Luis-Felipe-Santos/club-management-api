@@ -13,5 +13,7 @@ public class SocioResumoDTO {
     private String nome;
     private String documento;
     private String telefone;
+    private String email;
+    private String imagemUrl;
     private StatusSocio status;
 }
