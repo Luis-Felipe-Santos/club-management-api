@@ -22,4 +22,6 @@ public class PlanoCreateDTO {
 
     @NotNull
     private PeriodicidadePlano periodicidade;
+
+    private Long clubeId;
 }

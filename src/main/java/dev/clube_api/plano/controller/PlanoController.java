@@ -45,12 +45,13 @@ public class PlanoController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
     public ResponseEntity<List<PlanoResponseDTO>> listar(
+            @RequestParam Long clubeId,
             Authentication authentication
     ) {
         UsuarioModel usuarioLogado = getUsuarioLogado(authentication);
 
         return ResponseEntity.ok(
-                planoService.listarPorClube(usuarioLogado)
+                planoService.listarPorClube(clubeId, usuarioLogado)
         );
     }
 
@@ -92,10 +93,8 @@ public class PlanoController {
         return ResponseEntity.noContent().build();
     }
 
-
     private UsuarioModel getUsuarioLogado(Authentication authentication) {
         String email = authentication.getName();
         return usuarioService.buscarPorEmail(email);
     }
 }
-
