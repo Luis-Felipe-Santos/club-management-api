@@ -5,9 +5,9 @@ import dev.clube_api.socio.dto.SocioCreateDTO;
 import dev.clube_api.socio.dto.SocioResponseDTO;
 import dev.clube_api.socio.dto.SocioResumoDTO;
 import dev.clube_api.socio.dto.SocioUpdateDTO;
-import dev.clube_api.socio.enums.StatusSocio;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
+import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.List;
 @Component
 public class SocioMapper {
 
-    public SocioModel toEntity(SocioCreateDTO dto, ClubeModel clube){
+    public SocioModel toEntity(SocioCreateDTO dto, ClubeModel clube) {
         SocioModel socio = new SocioModel();
 
         socio.setNome(dto.getNome());
@@ -30,7 +30,7 @@ public class SocioMapper {
         return socio;
     }
 
-    public SocioResponseDTO toResponseDTO(SocioModel socio, List<SocioPlanoResumoDTO> planos){
+    public SocioResponseDTO toResponseDTO(SocioModel socio, List<SocioPlanoResumoDTO> planos) {
         SocioResponseDTO dto = new SocioResponseDTO();
 
         dto.setId(socio.getId());
@@ -49,7 +49,14 @@ public class SocioMapper {
         return dto;
     }
 
-    public SocioResumoDTO toResumoDTO(SocioModel socio) {
+    public SocioResumoDTO toResumoDTO(
+            SocioModel socio,
+            Long socioPlanoId,
+            Long planoId,
+            String planoNome,
+            StatusSocioPlano statusPlano,
+            Boolean possuiPlanoAtivo
+    ) {
         SocioResumoDTO dto = new SocioResumoDTO();
 
         dto.setId(socio.getId());
@@ -61,10 +68,16 @@ public class SocioMapper {
         dto.setEndereco(socio.getEndereco());
         dto.setStatus(socio.getStatus());
 
+        dto.setSocioPlanoId(socioPlanoId);
+        dto.setPlanoId(planoId);
+        dto.setPlanoNome(planoNome);
+        dto.setStatusPlano(statusPlano);
+        dto.setPossuiPlanoAtivo(possuiPlanoAtivo);
+
         return dto;
     }
 
-    public void updateEntity(SocioModel socio, SocioUpdateDTO dto){
+    public void updateEntity(SocioModel socio, SocioUpdateDTO dto) {
         if (dto.getNome() != null) {
             socio.setNome(dto.getNome());
         }

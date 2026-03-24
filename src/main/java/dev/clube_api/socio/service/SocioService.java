@@ -13,6 +13,7 @@ import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio.repository.SocioRepository;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
+import dev.clube_api.socio_plano.enums.StatusSocioPlano;
 import dev.clube_api.socio_plano.service.SocioPlanoService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import org.springframework.security.access.AccessDeniedException;
@@ -60,7 +61,35 @@ public class SocioService {
 
         return socioRepository.findByClube(clube)
                 .stream()
-                .map(socioMapper::toResumoDTO)
+                .map(socio -> {
+                    List<SocioPlanoResumoDTO> planos =
+                            socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
+
+                    SocioPlanoResumoDTO planoAtivo = planos.stream()
+                            .filter(plano -> plano.getStatus() == StatusSocioPlano.ATIVO)
+                            .findFirst()
+                            .orElse(null);
+
+                    if (planoAtivo == null) {
+                        return socioMapper.toResumoDTO(
+                                socio,
+                                null,
+                                null,
+                                null,
+                                null,
+                                false
+                        );
+                    }
+
+                    return socioMapper.toResumoDTO(
+                            socio,
+                            planoAtivo.getSocioPlanoId(),
+                            planoAtivo.getId(),
+                            planoAtivo.getNomePlano(),
+                            planoAtivo.getStatus(),
+                            true
+                    );
+                })
                 .toList();
     }
 
@@ -81,7 +110,8 @@ public class SocioService {
 
         socioMapper.updateEntity(socio, dto);
 
-        var planos = socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
+        List<SocioPlanoResumoDTO> planos =
+                socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
 
         return socioMapper.toResponseDTO(
                 socioRepository.save(socio),
