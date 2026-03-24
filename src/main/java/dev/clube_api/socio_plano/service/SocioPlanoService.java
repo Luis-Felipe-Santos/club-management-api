@@ -117,7 +117,14 @@ public class SocioPlanoService {
                         plano.getClube().getId()
                 )
                 .stream()
-                .map(sp -> socioMapper.toResumoDTO(sp.getSocio()))
+                .map(sp -> socioMapper.toResumoDTO(
+                        sp.getSocio(),
+                        sp.getId(),
+                        sp.getPlano().getId(),
+                        sp.getPlano().getNome(),
+                        sp.getStatus(),
+                        sp.getStatus() == StatusSocioPlano.ATIVO
+                ))
                 .toList();
     }
 
