@@ -14,5 +14,6 @@ public class DependenteResumoDTO {
     private Long id;
     private String nome;
     private String parentesco;
+    private String imagemUrl;
     private StatusDependente status;
 }

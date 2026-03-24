@@ -44,6 +44,7 @@ public class DependenteMapper {
                 dependente.getId(),
                 dependente.getNome(),
                 dependente.getParentesco(),
+                dependente.getImagemUrl(),
                 dependente.getStatus()
         );
     }
