@@ -65,12 +65,20 @@ public class SocioService {
                     List<SocioPlanoResumoDTO> planos =
                             socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
 
-                    SocioPlanoResumoDTO planoAtivo = planos.stream()
+                    SocioPlanoResumoDTO planoAtual = planos.stream()
                             .filter(plano -> plano.getStatus() == StatusSocioPlano.ATIVO)
                             .findFirst()
-                            .orElse(null);
+                            .orElseGet(() -> planos.stream()
+                                    .filter(plano -> plano.getStatus() == StatusSocioPlano.SUSPENSO)
+                                    .findFirst()
+                                    .orElseGet(() -> planos.stream()
+                                            .filter(plano -> plano.getStatus() == StatusSocioPlano.CANCELADO)
+                                            .findFirst()
+                                            .orElse(null)
+                                    )
+                            );
 
-                    if (planoAtivo == null) {
+                    if (planoAtual == null) {
                         return socioMapper.toResumoDTO(
                                 socio,
                                 null,
@@ -83,11 +91,11 @@ public class SocioService {
 
                     return socioMapper.toResumoDTO(
                             socio,
-                            planoAtivo.getSocioPlanoId(),
-                            planoAtivo.getId(),
-                            planoAtivo.getNomePlano(),
-                            planoAtivo.getStatus(),
-                            true
+                            planoAtual.getSocioPlanoId(),
+                            planoAtual.getId(),
+                            planoAtual.getNomePlano(),
+                            planoAtual.getStatus(),
+                            planoAtual.getStatus() == StatusSocioPlano.ATIVO
                     );
                 })
                 .toList();
