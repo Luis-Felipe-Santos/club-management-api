@@ -1,4 +1,4 @@
-package dev.clube_api.socio.imagem.service;
+package dev.clube_api.dependente.imagem.service;
 
 import dev.clube_api.shared.storage.dto.SignedUrlResponseDTO;
 import dev.clube_api.shared.storage.dto.UploadImagemResponseDTO;
@@ -11,24 +11,29 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class SocioImagemService {
+public class DependenteImagemService {
 
     private final SupabaseStorageService supabaseStorageService;
 
-    public SocioImagemService(SupabaseStorageService supabaseStorageService) {
+    public DependenteImagemService(SupabaseStorageService supabaseStorageService) {
         this.supabaseStorageService = supabaseStorageService;
     }
 
-    public UploadImagemResponseDTO uploadImagem(MultipartFile file, Long clubeId) {
+    public UploadImagemResponseDTO uploadImagem(MultipartFile file, Long socioId) {
         validarArquivo(file);
 
         String extensao = obterExtensao(file.getOriginalFilename());
         String nomeArquivo = UUID.randomUUID() + extensao;
-        String path = "clubes/" + clubeId + "/socios/" + nomeArquivo;
+        String path = "socios/" + socioId + "/dependentes/" + nomeArquivo;
 
         try {
-            supabaseStorageService.uploadArquivoSocio(file.getBytes(), path, file.getContentType());
-            String signedUrl = supabaseStorageService.gerarSignedUrlSocio(path, 3600);
+            supabaseStorageService.uploadArquivoDependente(
+                    file.getBytes(),
+                    path,
+                    file.getContentType()
+            );
+
+            String signedUrl = supabaseStorageService.gerarSignedUrlDependente(path, 3600);
 
             return new UploadImagemResponseDTO(path, signedUrl);
         } catch (IOException e) {
@@ -37,7 +42,7 @@ public class SocioImagemService {
     }
 
     public SignedUrlResponseDTO gerarSignedUrl(String path) {
-        String signedUrl = supabaseStorageService.gerarSignedUrlSocio(path, 3600);
+        String signedUrl = supabaseStorageService.gerarSignedUrlDependente(path, 3600);
         return new SignedUrlResponseDTO(signedUrl);
     }
 

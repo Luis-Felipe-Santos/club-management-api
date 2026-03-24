@@ -1,4 +1,4 @@
-package dev.clube_api.socio.imagem.supabase;
+package dev.clube_api.shared.storage.supabase;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record SupabaseProperties(
         String url,
         String serviceRoleKey,
-        String bucket
+        String bucketSocios,
+        String bucketDependentes
 ) {
 }

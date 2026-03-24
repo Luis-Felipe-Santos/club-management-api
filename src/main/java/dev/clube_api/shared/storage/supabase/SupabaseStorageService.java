@@ -1,4 +1,4 @@
-package dev.clube_api.socio.imagem.supabase;
+package dev.clube_api.shared.storage.supabase;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -17,10 +17,26 @@ public class SupabaseStorageService {
         this.restTemplate = restTemplate;
     }
 
-    public void uploadArquivo(byte[] arquivo, String path, String contentType) {
+    public void uploadArquivoSocio(byte[] arquivo, String path, String contentType) {
+        uploadArquivoPorBucket(arquivo, path, contentType, supabaseProperties.bucketSocios());
+    }
+
+    public void uploadArquivoDependente(byte[] arquivo, String path, String contentType) {
+        uploadArquivoPorBucket(arquivo, path, contentType, supabaseProperties.bucketDependentes());
+    }
+
+    public String gerarSignedUrlSocio(String path, int expiresIn) {
+        return gerarSignedUrlPorBucket(path, expiresIn, supabaseProperties.bucketSocios());
+    }
+
+    public String gerarSignedUrlDependente(String path, int expiresIn) {
+        return gerarSignedUrlPorBucket(path, expiresIn, supabaseProperties.bucketDependentes());
+    }
+
+    private void uploadArquivoPorBucket(byte[] arquivo, String path, String contentType, String bucket) {
         String uploadUrl = supabaseProperties.url()
                 + "/storage/v1/object/"
-                + supabaseProperties.bucket()
+                + bucket
                 + "/"
                 + path;
 
@@ -45,10 +61,10 @@ public class SupabaseStorageService {
         }
     }
 
-    public String gerarSignedUrl(String path, int expiresIn) {
+    private String gerarSignedUrlPorBucket(String path, int expiresIn, String bucket) {
         String url = supabaseProperties.url()
                 + "/storage/v1/object/sign/"
-                + supabaseProperties.bucket()
+                + bucket
                 + "/"
                 + path;
 
