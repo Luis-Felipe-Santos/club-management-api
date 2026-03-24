@@ -28,13 +28,13 @@ public class SocioModel {
     private String nome;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private TipoDocumentoSocio tipoDocumento;
 
-    @Column(nullable = false, length = 14)
+    @Column(nullable = true, length = 14)
     private String documento;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String telefone;
 
     @Column

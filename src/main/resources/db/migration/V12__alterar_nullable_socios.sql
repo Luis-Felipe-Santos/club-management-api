@@ -1,0 +1,8 @@
+ALTER TABLE socios
+    ALTER COLUMN tipo_documento DROP NOT NULL;
+
+ALTER TABLE socios
+    ALTER COLUMN documento DROP NOT NULL;
+
+ALTER TABLE socios
+    ALTER COLUMN telefone DROP NOT NULL;

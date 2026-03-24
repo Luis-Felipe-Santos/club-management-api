@@ -8,6 +8,7 @@ import dev.clube_api.socio.dto.SocioResponseDTO;
 import dev.clube_api.socio.dto.SocioResumoDTO;
 import dev.clube_api.socio.dto.SocioUpdateDTO;
 import dev.clube_api.socio.enums.StatusSocio;
+import dev.clube_api.socio.enums.TipoDocumentoSocio;
 import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio.repository.SocioRepository;
@@ -40,6 +41,9 @@ public class SocioService {
     }
 
     public SocioResponseDTO criar(SocioCreateDTO dto, UsuarioModel usuarioLogado) {
+        normalizarCampos(dto);
+        validarDocumento(dto.getTipoDocumento(), dto.getDocumento());
+
         ClubeModel clube = buscarClubeDoUsuario(dto.getClubeId(), usuarioLogado);
 
         SocioModel socio = socioMapper.toEntity(dto, clube);
@@ -70,6 +74,9 @@ public class SocioService {
     }
 
     public SocioResponseDTO atualizar(Long socioId, SocioUpdateDTO dto, UsuarioModel usuarioLogado) {
+        normalizarCampos(dto);
+        validarDocumento(dto.getTipoDocumento(), dto.getDocumento());
+
         SocioModel socio = buscarSocioDoUsuario(socioId, usuarioLogado);
 
         socioMapper.updateEntity(socio, dto);
@@ -101,6 +108,52 @@ public class SocioService {
 
         socio.setStatus(StatusSocio.ATIVO);
         socioRepository.save(socio);
+    }
+
+    private void validarDocumento(TipoDocumentoSocio tipoDocumento, String documento) {
+        boolean temTipoDocumento = tipoDocumento != null;
+        boolean temDocumento = documento != null && !documento.isBlank();
+
+        if (temTipoDocumento && !temDocumento) {
+            throw new IllegalArgumentException(
+                    "Documento deve ser informado quando o tipo de documento for preenchido."
+            );
+        }
+
+        if (!temTipoDocumento && temDocumento) {
+            throw new IllegalArgumentException(
+                    "Tipo de documento deve ser informado quando o documento for preenchido."
+            );
+        }
+
+        if (temDocumento && (documento.length() < 11 || documento.length() > 14)) {
+            throw new IllegalArgumentException(
+                    "Documento deve ter entre 11 e 14 caracteres."
+            );
+        }
+    }
+
+    private void normalizarCampos(SocioCreateDTO dto) {
+        dto.setDocumento(normalizarTexto(dto.getDocumento()));
+        dto.setTelefone(normalizarTexto(dto.getTelefone()));
+        dto.setEmail(normalizarTexto(dto.getEmail()));
+        dto.setEndereco(normalizarTexto(dto.getEndereco()));
+        dto.setImagemUrl(normalizarTexto(dto.getImagemUrl()));
+    }
+
+    private void normalizarCampos(SocioUpdateDTO dto) {
+        dto.setDocumento(normalizarTexto(dto.getDocumento()));
+        dto.setTelefone(normalizarTexto(dto.getTelefone()));
+        dto.setEmail(normalizarTexto(dto.getEmail()));
+        dto.setEndereco(normalizarTexto(dto.getEndereco()));
+        dto.setImagemUrl(normalizarTexto(dto.getImagemUrl()));
+    }
+
+    private String normalizarTexto(String valor) {
+        if (valor == null) return null;
+
+        String texto = valor.trim();
+        return texto.isEmpty() ? null : texto;
     }
 
     private ClubeModel buscarClubeDoUsuario(Long clubeId, UsuarioModel usuarioLogado) {

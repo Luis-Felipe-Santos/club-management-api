@@ -17,14 +17,10 @@ public class SocioCreateDTO {
     @NotBlank
     private String nome;
 
-    @NotNull
     private TipoDocumentoSocio tipoDocumento;
 
-    @NotBlank
-    @Size(min = 11, max = 14)
     private String documento;
 
-    @NotBlank
     private String telefone;
 
     @Email
