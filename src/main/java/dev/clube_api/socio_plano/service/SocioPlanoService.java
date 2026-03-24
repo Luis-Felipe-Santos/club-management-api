@@ -266,4 +266,55 @@ public class SocioPlanoService {
             throw new IllegalArgumentException("Sócio e plano devem pertencer ao mesmo clube");
         }
     }
+    public void suspenderPlanoAtivoDoSocio(SocioModel socio, UsuarioModel usuarioLogado) {
+        validarAcessoAoClube(socio.getClube().getAdmin().getId(), usuarioLogado);
+
+        SocioPlanoModel sp = socioPlanoRepository
+                .findFirstBySocioAndStatusOrderByCreatedAtDesc(socio, StatusSocioPlano.ATIVO)
+                .orElse(null);
+
+        if (sp == null) {
+            return;
+        }
+
+        StatusSocioPlano statusAnterior = sp.getStatus();
+
+        sp.setStatus(StatusSocioPlano.SUSPENSO);
+
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(
+                salvo,
+                statusAnterior,
+                StatusSocioPlano.SUSPENSO,
+                AcaoSocioPlano.SUSPENSAO,
+                usuarioLogado
+        );
+    }
+
+    public void reativarPlanoSuspensoDoSocio(SocioModel socio, UsuarioModel usuarioLogado) {
+        validarAcessoAoClube(socio.getClube().getAdmin().getId(), usuarioLogado);
+
+        SocioPlanoModel sp = socioPlanoRepository
+                .findFirstBySocioAndStatusOrderByCreatedAtDesc(socio, StatusSocioPlano.SUSPENSO)
+                .orElse(null);
+
+        if (sp == null) {
+            return;
+        }
+
+        StatusSocioPlano statusAnterior = sp.getStatus();
+
+        sp.setStatus(StatusSocioPlano.ATIVO);
+
+        SocioPlanoModel salvo = socioPlanoRepository.save(sp);
+
+        historicoService.registrar(
+                salvo,
+                statusAnterior,
+                StatusSocioPlano.ATIVO,
+                AcaoSocioPlano.REATIVACAO,
+                usuarioLogado
+        );
+    }
 }

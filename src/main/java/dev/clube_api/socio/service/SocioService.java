@@ -110,8 +110,7 @@ public class SocioService {
 
         socioMapper.updateEntity(socio, dto);
 
-        List<SocioPlanoResumoDTO> planos =
-                socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
+        var planos = socioPlanoService.listarPorSocioResumo(socio, usuarioLogado);
 
         return socioMapper.toResponseDTO(
                 socioRepository.save(socio),
@@ -124,6 +123,8 @@ public class SocioService {
 
         socio.setStatus(StatusSocio.INATIVO);
         socioRepository.save(socio);
+
+        socioPlanoService.suspenderPlanoAtivoDoSocio(socio, usuarioLogado);
     }
 
     public void bloquear(Long socioId, UsuarioModel usuarioLogado) {
@@ -138,6 +139,8 @@ public class SocioService {
 
         socio.setStatus(StatusSocio.ATIVO);
         socioRepository.save(socio);
+
+        socioPlanoService.reativarPlanoSuspensoDoSocio(socio, usuarioLogado);
     }
 
     private void validarDocumento(TipoDocumentoSocio tipoDocumento, String documento) {
