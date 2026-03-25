@@ -101,4 +101,19 @@ public class PagamentoController {
                 )
         );
     }
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    @GetMapping("/grade")
+    public ResponseEntity<List<PagamentoGradeLinhaDTO>> listarGrade(
+            @RequestParam Long clubeId,
+            @RequestParam Integer ano,
+            @RequestParam(required = false) Long planoId,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado =
+                usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(
+                pagamentoService.listarGrade(clubeId, ano, planoId, usuarioLogado)
+        );
+    }
 }

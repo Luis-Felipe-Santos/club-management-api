@@ -18,6 +18,12 @@ public interface PagamentoRepository extends JpaRepository<PagamentoModel, Long>
             Long clubeId
     );
 
+    List<PagamentoModel> findBySocioPlano_IdInAndCompetenciaBetween(
+            List<Long> socioPlanoIds,
+            YearMonth inicio,
+            YearMonth fim
+    );
+
 
     @Query("""
         SELECT p

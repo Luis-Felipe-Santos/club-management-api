@@ -20,6 +20,14 @@ public interface SocioPlanoRepository extends JpaRepository<SocioPlanoModel, Lon
             Long clubeId
     );
 
+    List<SocioPlanoModel> findBySocio_Clube_IdAndStatus(Long clubeId, StatusSocioPlano status);
+
+    List<SocioPlanoModel> findBySocio_Clube_IdAndPlano_IdAndStatus(
+            Long clubeId,
+            Long planoId,
+            StatusSocioPlano status
+    );
+
     Optional<SocioPlanoModel> findFirstBySocioAndStatusOrderByCreatedAtDesc(
             SocioModel socio,
             StatusSocioPlano status
