@@ -1,5 +1,7 @@
 package dev.clube_api.socio_plano.service;
 
+import dev.clube_api.clube.model.ClubeModel;
+import dev.clube_api.clube.repository.ClubeRepository;
 import dev.clube_api.plano.model.PlanoModel;
 import dev.clube_api.plano.repository.PlanoRepository;
 import dev.clube_api.shared.exception.RecursoNaoEncontradoException;
@@ -8,6 +10,7 @@ import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio.model.SocioModel;
 import dev.clube_api.socio.repository.SocioRepository;
 import dev.clube_api.socio_plano.dto.SocioPlanoCreateDTO;
+import dev.clube_api.socio_plano.dto.SocioPlanoOptionDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
 import dev.clube_api.socio_plano.enums.StatusSocioPlano;
@@ -32,6 +35,7 @@ public class SocioPlanoService {
     private final PlanoRepository planoRepository;
     private final SocioPlanoHistoricoService historicoService;
     private final SocioMapper socioMapper;
+    private final ClubeRepository clubeRepository;
 
     public SocioPlanoService(
             SocioPlanoRepository socioPlanoRepository,
@@ -39,7 +43,8 @@ public class SocioPlanoService {
             SocioRepository socioRepository,
             PlanoRepository planoRepository,
             SocioPlanoHistoricoService historicoService,
-            SocioMapper socioMapper
+            SocioMapper socioMapper,
+            ClubeRepository clubeRepository
     ) {
         this.socioPlanoRepository = socioPlanoRepository;
         this.socioPlanoMapper = socioPlanoMapper;
@@ -47,6 +52,7 @@ public class SocioPlanoService {
         this.planoRepository = planoRepository;
         this.historicoService = historicoService;
         this.socioMapper = socioMapper;
+        this.clubeRepository = clubeRepository;
     }
 
     @Transactional
@@ -101,6 +107,46 @@ public class SocioPlanoService {
         return socioPlanoRepository.findBySocio(socio)
                 .stream()
                 .map(socioPlanoMapper::toResumoDTO)
+                .toList();
+    }
+
+    public List<SocioPlanoOptionDTO> listarParaSelecao(
+            Long clubeId,
+            Long planoId,
+            UsuarioModel usuarioLogado
+    ) {
+        ClubeModel clube = clubeRepository.findById(clubeId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Clube não encontrado")
+                );
+
+        if (!clube.getAdmin().getId().equals(usuarioLogado.getId())) {
+            throw new AccessDeniedException("Você não tem acesso a este clube");
+        }
+
+        List<SocioPlanoModel> socioPlanos;
+
+        if (planoId != null) {
+            socioPlanos = socioPlanoRepository.findBySocio_Clube_IdAndPlano_IdAndStatus(
+                    clubeId,
+                    planoId,
+                    StatusSocioPlano.ATIVO
+            );
+        } else {
+            socioPlanos = socioPlanoRepository.findBySocio_Clube_IdAndStatus(
+                    clubeId,
+                    StatusSocioPlano.ATIVO
+            );
+        }
+
+        return socioPlanos.stream()
+                .map(socioPlano -> new SocioPlanoOptionDTO(
+                        socioPlano.getId(),
+                        socioPlano.getSocio().getId(),
+                        socioPlano.getSocio().getNome(),
+                        socioPlano.getPlano().getId(),
+                        socioPlano.getPlano().getNome()
+                ))
                 .toList();
     }
 

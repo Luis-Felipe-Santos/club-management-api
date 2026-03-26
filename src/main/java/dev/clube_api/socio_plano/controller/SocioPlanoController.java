@@ -4,6 +4,7 @@ package dev.clube_api.socio_plano.controller;
 import dev.clube_api.socio.dto.SocioResumoDTO;
 import dev.clube_api.socio.mapper.SocioMapper;
 import dev.clube_api.socio_plano.dto.SocioPlanoCreateDTO;
+import dev.clube_api.socio_plano.dto.SocioPlanoOptionDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResponseDTO;
 import dev.clube_api.socio_plano.dto.SocioPlanoResumoDTO;
 import dev.clube_api.socio_plano.service.SocioPlanoService;
@@ -49,6 +50,21 @@ public class SocioPlanoController {
     ) {
         UsuarioModel usuarioLogado = usuarioService.buscarPorEmail(authentication.getName());
         return  ResponseEntity.ok(socioPlanoService.listarPorSocio(id, usuarioLogado));
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    @GetMapping
+    public ResponseEntity<List<SocioPlanoOptionDTO>> listarParaSelecao(
+            @RequestParam Long clubeId,
+            @RequestParam(required = false) Long planoId,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado =
+                usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(
+                socioPlanoService.listarParaSelecao(clubeId, planoId, usuarioLogado)
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
