@@ -1,6 +1,7 @@
 package dev.clube_api.pagamento.mapper;
 
 import dev.clube_api.pagamento.dto.InadimplenteDTO;
+import dev.clube_api.pagamento.dto.PagamentoListaDTO;
 import dev.clube_api.pagamento.dto.PagamentoResponseDTO;
 import dev.clube_api.pagamento.dto.PagamentoResumoDTO;
 import dev.clube_api.pagamento.model.PagamentoModel;
@@ -39,6 +40,25 @@ public class PagamentoMapper {
         dto.setDataPagamento(pagamento.getDataPagamento());
 
         return dto;
+    }
+
+    public PagamentoListaDTO toListaDTO(PagamentoModel pagamento) {
+        return new PagamentoListaDTO(
+                pagamento.getId(),
+                pagamento.getSocioPlano().getSocio().getId(),
+                pagamento.getSocioPlano().getSocio().getNome(),
+                pagamento.getSocioPlano().getSocio().getImagemUrl(),
+                pagamento.getSocioPlano().getId(),
+                pagamento.getSocioPlano().getPlano().getId(),
+                pagamento.getSocioPlano().getPlano().getNome(),
+                pagamento.getCompetencia(),
+                pagamento.getValorBase(),
+                pagamento.getValorFinal(),
+                pagamento.getStatus(),
+                pagamento.getDataVencimento(),
+                pagamento.getDataPagamento(),
+                pagamento.getObservacao()
+        );
     }
     public InadimplenteDTO toInadimplente(PagamentoModel pagamento) {
 

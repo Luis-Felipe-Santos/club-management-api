@@ -186,6 +186,27 @@ public class PagamentoService {
                 .map(socioPlano -> montarLinhaGrade(socioPlano, ano, pagamentosMap))
                 .toList();
     }
+    public List<PagamentoListaDTO> listar(
+            Long clubeId,
+            Long planoId,
+            YearMonth competencia,
+            StatusPagamento status,
+            String busca,
+            UsuarioModel usuarioLogado
+    ) {
+        ClubeModel clube = clubeRepository.findById(clubeId)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Clube não encontrado")
+                );
+
+        validarAcessoAoClube(clube, usuarioLogado);
+
+        return pagamentoRepository
+                .buscarComFiltros(clubeId, planoId, competencia, status, busca)
+                .stream()
+                .map(pagamentoMapper::toListaDTO)
+                .toList();
+    }
 
     public List<InadimplenteDTO> gerarRelatorioInadimplentes(
             YearMonth competencia,

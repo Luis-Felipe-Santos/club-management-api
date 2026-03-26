@@ -1,6 +1,7 @@
 package dev.clube_api.pagamento.controller;
 
 import dev.clube_api.pagamento.dto.*;
+import dev.clube_api.pagamento.enums.StatusPagamento;
 import dev.clube_api.pagamento.service.PagamentoService;
 import dev.clube_api.usuario.model.UsuarioModel;
 import dev.clube_api.usuario.service.UsuarioService;
@@ -23,6 +24,31 @@ public class PagamentoController {
     public PagamentoController(PagamentoService pagamentoService, UsuarioService usuarioService) {
         this.pagamentoService = pagamentoService;
         this.usuarioService = usuarioService;
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
+    @GetMapping
+    public ResponseEntity<List<PagamentoListaDTO>> listar(
+            @RequestParam Long clubeId,
+            @RequestParam(required = false) Long planoId,
+            @RequestParam(required = false) YearMonth competencia,
+            @RequestParam(required = false) StatusPagamento status,
+            @RequestParam(required = false) String busca,
+            Authentication authentication
+    ) {
+        UsuarioModel usuarioLogado =
+                usuarioService.buscarPorEmail(authentication.getName());
+
+        return ResponseEntity.ok(
+                pagamentoService.listar(
+                        clubeId,
+                        planoId,
+                        competencia,
+                        status,
+                        busca,
+                        usuarioLogado
+                )
+        );
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','FUNCIONARIO')")
