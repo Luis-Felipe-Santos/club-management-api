@@ -121,6 +121,10 @@ public class PagamentoService {
             pagamento.setDataPagamento(dto.getDataPagamento());
         }
 
+        if (dto.getValorFinal() != null) {
+            pagamento.setValorFinal(dto.getValorFinal());
+        }
+
         if (dto.getObservacao() != null) {
             pagamento.setObservacao(dto.getObservacao());
         }
